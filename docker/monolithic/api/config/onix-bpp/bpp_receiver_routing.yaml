@@ -1,0 +1,38 @@
+# ONIX BPP Receiver Routing Configuration
+
+# Supports Phase 1 (Discover from CDS) and Phase 2+ (Direct from BAP-ONIX)
+# Phase 1: Discover requests from CDS (after aggregation)
+# Phase 2+: Other requests directly from BAP-ONIX (NO CDS involvement)
+# All routes to backend service
+
+routingRules:
+  # Phase 1: Discover request from CDS (routed to backend service)
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: url
+    target:
+      url: http://mock-bpp:9002
+      excludeAction: false
+    endpoints:
+      - discover
+
+  # Phase 2+: Other requests from BAP-ONIX Caller (targetType: bpp routing)
+  # These endpoints match bapTxnCaller-routing.yaml Phase 2+ configuration
+  # Requests come directly from BAP-ONIX (bypasses CDS)
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: url
+    target:
+      url: http://mock-bpp:9002
+      excludeAction: false
+    endpoints:
+      - select
+      - init
+      - confirm
+      - status
+      - track
+      - cancel
+      - update
+      - rating
+      - support
+
