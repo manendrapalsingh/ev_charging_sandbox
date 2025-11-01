@@ -40,4 +40,3 @@ services:
 networks:
   onix-network:
     driver: bridge
-

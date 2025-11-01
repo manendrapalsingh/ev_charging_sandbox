@@ -82,8 +82,8 @@ The **onix-adapter** is a production-ready, plugin-based middleware adapter for 
 - Docker Engine 20.10 or higher
 - Docker Compose 2.0 or higher
 - Access to onix-adapter Docker images:
-  - `ghcr.io/manendrapalsingh/ev_charging_sandbox/onix-bap-plugin:latest`
-  - `ghcr.io/manendrapalsingh/ev_charging_sandbox/onix-bpp-plugin:latest`
+  - `manendrapalsingh/onix-bap-plugin:latest`
+  - `manendrapalsingh/onix-bpp-plugin:latest`
 
 #### For Helm Chart Integration
 - Kubernetes cluster (v1.20+)

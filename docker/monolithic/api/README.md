@@ -35,8 +35,8 @@ docker/monolithic/api/
 - Docker Engine 20.10+
 - Docker Compose 2.0+
 - Access to onix-adapter Docker images:
-  - `ghcr.io/manendrapalsingh/ev_charging_sandbox/onix-bap-plugin:latest`
-  - `ghcr.io/manendrapalsingh/ev_charging_sandbox/onix-bpp-plugin:latest`
+  - `manendrapalsingh/onix-bap-plugin:latest`
+  - `manendrapalsingh/onix-bpp-plugin:latest`
 - Schema files mounted at `../schema` (read-only)
 
 ## Quick Start
@@ -50,7 +50,7 @@ docker/monolithic/api/
 
 2. **Verify services are running:**
    ```bash
-   docker ps | grep -E "(redis-bap|onix-bap-plugin)"
+   docker ps | grep -E "(redis-onix-bap|onix-bap-plugin)"
    ```
 
 3. **Check logs:**
@@ -71,7 +71,7 @@ docker/monolithic/api/
 
 2. **Verify services are running:**
    ```bash
-   docker ps | grep -E "(redis-bpp|onix-bpp-plugin)"
+   docker ps | grep -E "(redis-onix-bpp|onix-bpp-plugin)"
    ```
 
 3. **Check logs:**
@@ -166,7 +166,7 @@ The adapter uses the following environment variables:
 ## Network Configuration
 
 Both services use the `onix-network` bridge network for inter-container communication:
-- Redis services: `redis-bap`, `redis-bpp`
+- Redis services: `redis-onix-bap`, `redis-onix-bpp`
 - Onix adapters can communicate with other services on the same network
 
 ## Stopping Services
@@ -227,13 +227,13 @@ docker-compose -f docker-compose-bap.yml -f docker-compose-bpp.yml down -v
 
 1. **Verify Redis is healthy:**
    ```bash
-   docker exec redis-bap redis-cli ping
-   docker exec redis-bpp redis-cli ping
+   docker exec redis-onix-bap redis-cli ping
+   docker exec redis-onix-bpp redis-cli ping
    ```
 
 2. **Check Redis logs:**
    ```bash
-   docker-compose -f docker-compose-bap.yml logs redis-bap
+   docker-compose -f docker-compose-bap.yml logs redis-onix-bap
    ```
 
 ## Customization

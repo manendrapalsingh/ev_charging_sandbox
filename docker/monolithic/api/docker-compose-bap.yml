@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  redis-bap:
+  redis-onix-bap:
     image: redis:alpine
-    container_name: redis-bap
+    container_name: redis-onix-bap
     ports:
       - "6379:6379"
     networks:
@@ -16,8 +16,8 @@ services:
     restart: unless-stopped
 
   onix-bap-plugin:
-    # Use pre-built image from GitHub Container Registry
-    image: ghcr.io/manendrapalsingh/ev_charging_sandbox/onix-bap-plugin:latest
+    # Use pre-built image from Docker Hub
+    image: manendrapalsingh/onix-bap-plugin:latest
     container_name: onix-bap-plugin
     ports:
       - "8001:8001"
@@ -32,7 +32,7 @@ services:
       - CONFIG_FILE=/app/config/adapter.yaml
     restart: unless-stopped
     depends_on:
-      redis-bap:
+      redis-onix-bap:
         condition: service_healthy
     networks:
       - onix-network

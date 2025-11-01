@@ -54,7 +54,7 @@ modules:
         cache:
           id: cache
           config:
-            addr: redis-bap:6379
+            addr: redis-onix-bap:6379
         schemaValidator:
           id: schemavalidator
           config:
@@ -109,7 +109,7 @@ modules:
         cache:
           id: cache
           config:
-            addr: redis-bap:6379
+            addr: redis-onix-bap:6379
         router:
           id: router
           config:
