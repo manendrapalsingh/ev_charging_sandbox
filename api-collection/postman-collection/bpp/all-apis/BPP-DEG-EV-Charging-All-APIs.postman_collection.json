@@ -338,14 +338,67 @@
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
-				"exec": [""]
+				"exec": [
+					"// Auto-generate transaction_id if not set",
+					"if (!pm.environment.get('transaction_id') || pm.environment.get('transaction_id') === '') {",
+					"    const transactionId = pm.variables.replaceIn('{{$randomUUID}}');",
+					"    pm.environment.set('transaction_id', transactionId);",
+					"    console.log('Generated transaction_id: ' + transactionId);",
+					"}",
+					"",
+					"// Generate message_id for each request (unique per request)",
+					"const messageId = pm.variables.replaceIn('{{$guid}}');",
+					"pm.environment.set('message_id', messageId);",
+					"",
+					"// Generate timestamp in ISO 8601 format",
+					"const timestamp = new Date().toISOString();",
+					"pm.environment.set('timestamp', timestamp);",
+					"",
+					"// Extract and store order_id from response if available",
+					"const requestBody = pm.request.body;",
+					"if (requestBody && requestBody.raw) {",
+					"    try {",
+					"        const bodyJson = JSON.parse(requestBody.raw);",
+					"        if (bodyJson.message && bodyJson.message.order && bodyJson.message.order['beckn:id']) {",
+					"            pm.environment.set('order_id', bodyJson.message.order['beckn:id']);",
+					"        }",
+					"        if (bodyJson.message && bodyJson.message.order && bodyJson.message.order.fulfillment && bodyJson.message.order.fulfillment['beckn:deliveryAttributes'] && bodyJson.message.order.fulfillment['beckn:deliveryAttributes'].sessionId) {",
+					"            pm.environment.set('session_id', bodyJson.message.order.fulfillment['beckn:deliveryAttributes'].sessionId);",
+					"        }",
+					"    } catch (e) {",
+					"        console.log('Error parsing request body: ' + e.message);",
+					"    }",
+					"}"
+				]
 			}
 		},
 		{
 			"listen": "test",
 			"script": {
 				"type": "text/javascript",
-				"exec": [""]
+				"exec": [
+					"// Store order_id and session_id from response",
+					"if (pm.response.code === 200 || pm.response.code === 202) {",
+					"    try {",
+					"        const responseJson = pm.response.json();",
+					"        if (responseJson.message && responseJson.message.order && responseJson.message.order['beckn:id']) {",
+					"            pm.environment.set('order_id', responseJson.message.order['beckn:id']);",
+					"            console.log('Order ID stored: ' + responseJson.message.order['beckn:id']);",
+					"        }",
+					"        if (responseJson.message && responseJson.message.order && responseJson.message.order.fulfillment && responseJson.message.order.fulfillment['beckn:deliveryAttributes'] && responseJson.message.order.fulfillment['beckn:deliveryAttributes'].sessionId) {",
+					"            pm.environment.set('session_id', responseJson.message.order.fulfillment['beckn:deliveryAttributes'].sessionId);",
+					"            console.log('Session ID stored: ' + responseJson.message.order.fulfillment['beckn:deliveryAttributes'].sessionId);",
+					"        }",
+					"    } catch (e) {",
+					"        console.log('Error parsing response: ' + e.message);",
+					"    }",
+					"}",
+					"",
+					"// Test assertions",
+					"pm.test('Status code is 200 or 202', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+					"});"
+				]
 			}
 		}
 	],

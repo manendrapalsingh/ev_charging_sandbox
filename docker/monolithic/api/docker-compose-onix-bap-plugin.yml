@@ -27,7 +27,7 @@ services:
       # Mount adapter.yaml directly to expected location
       - ../config/onix-bap/adapter.yaml:/app/config/adapter.yaml:ro
       # Mount schema directory (read-only)
-      - ../schema:/app/schemas:ro
+      - ../../schemas:/app/schemas:ro
     environment:
       - CONFIG_FILE=/app/config/adapter.yaml
     restart: unless-stopped
