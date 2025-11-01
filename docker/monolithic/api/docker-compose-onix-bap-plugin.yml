@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  redis-onix-bpp:
+  redis-onix-bap:
     image: redis:alpine
-    container_name: redis-onix-bpp
+    container_name: redis-onix-bap
     ports:
-      - "6380:6379"
+      - "6379:6379"
     networks:
       - onix-network
     healthcheck:
@@ -15,24 +15,24 @@ services:
       retries: 5
     restart: unless-stopped
 
-  onix-bpp-plugin:
+  onix-bap-plugin:
     # Use pre-built image from Docker Hub
-    image: manendrapalsingh/onix-bpp-plugin:latest
-    container_name: onix-bpp-plugin
+    image: manendrapalsingh/onix-bap-plugin:latest
+    container_name: onix-bap-plugin
     ports:
-      - "8002:8002"
+      - "8001:8001"
     volumes:
       # Mount config directory (writable for symlink creation, but original files won't be modified)
-      - ../config/onix-bpp:/app/config/onix-bpp
+      - ../config/onix-bap:/app/config/onix-bap
       # Mount adapter.yaml directly to expected location
-      - ../config/onix-bpp/adapter.yaml:/app/config/adapter.yaml:ro
+      - ../config/onix-bap/adapter.yaml:/app/config/adapter.yaml:ro
       # Mount schema directory (read-only)
       - ../schema:/app/schemas:ro
     environment:
       - CONFIG_FILE=/app/config/adapter.yaml
     restart: unless-stopped
     depends_on:
-      redis-onix-bpp:
+      redis-onix-bap:
         condition: service_healthy
     networks:
       - onix-network
@@ -40,4 +40,3 @@ services:
 networks:
   onix-network:
     driver: bridge
-

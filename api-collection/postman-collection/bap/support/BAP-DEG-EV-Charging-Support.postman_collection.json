@@ -1,0 +1,96 @@
+{
+	"info": {
+		"_postman_id": "65d469fe-b469-40f7-b7f9-0479fc855cef",
+		"name": "BAP-DEG:EV-Charging-Support",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30848972"
+	},
+	"item": [
+		{
+			"name": "support",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"support\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"bpp_id\": \"{{bpp_id}}\",\n    \"bpp_uri\": \"{{bpp_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"ref_id\": \"order-bpp-789012\",\n    \"ref_type\": \"order\"\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{bap_adapter_url}}/support",
+					"host": [
+						"{{bap_adapter_url}}"
+					],
+					"path": [
+						"support"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "domain",
+			"value": "beckn.one:deg:ev-charging:2.0.0"
+		},
+		{
+			"key": "version",
+			"value": "2.0.0"
+		},
+		{
+			"key": "bap_id",
+			"value": "ev-charging.sandbox1.com"
+		},
+		{
+			"key": "bap_uri",
+			"value": "http://onix-bap:8081/bap/receiver"
+		},
+		{
+			"key": "bpp_id",
+			"value": "ev-charging.sandbox2.com"
+		},
+		{
+			"key": "bpp_uri",
+			"value": "http://onix-bpp:8082/bpp/receiver"
+		},
+		{
+			"key": "bap_adapter_url",
+			"value": "http://localhost:8081/bap/caller"
+		},
+		{
+			"key": "transaction_id",
+			"value": "2b4d69aa-22e4-4c78-9f56-5a7b9e2b2002"
+		},
+		{
+			"key": "bpp_adapter_url",
+			"value": "http://localhost:8082/bpp/caller"
+		}
+	]
+}
+
