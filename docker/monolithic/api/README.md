@@ -16,8 +16,8 @@ In a monolithic architecture, the onix-adapter runs as a single container servic
 
 ```
 docker/monolithic/api/
-├── docker-compose-bap.yml          # BAP service configuration
-├── docker-compose-bpp.yml          # BPP service configuration
+├── docker-compose-onix-bap-plugin.yml          # BAP service configuration
+├── docker-compose-onix-bpp-plugin.yml          # BPP service configuration
 ├── config/
 │   ├── onix-bap/
 │   │   ├── adapter.yaml            # BAP adapter configuration
@@ -37,7 +37,7 @@ docker/monolithic/api/
 - Access to onix-adapter Docker images:
   - `manendrapalsingh/onix-bap-plugin:latest`
   - `manendrapalsingh/onix-bpp-plugin:latest`
-- Schema files mounted at `../schema` (read-only)
+- Schema files from `../../schemas` directory (read-only)
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ docker/monolithic/api/
 
 1. **Start the BAP services:**
    ```bash
-   docker-compose -f docker-compose-bap.yml up -d
+   docker-compose -f docker-compose-onix-bap-plugin.yml up -d
    ```
 
 2. **Verify services are running:**
@@ -55,18 +55,18 @@ docker/monolithic/api/
 
 3. **Check logs:**
    ```bash
-   docker-compose -f docker-compose-bap.yml logs -f onix-bap-plugin
+   docker-compose -f docker-compose-onix-bap-plugin.yml logs -f onix-bap-plugin
    ```
 
 4. **Access the BAP adapter:**
    - Caller endpoint: `http://localhost:8001/bap/caller/`
    - Receiver endpoint: `http://localhost:8001/bap/receiver/`
 
-### For BPP (Buyer App Provider)
+### For BPP (Buyer Platform Provider)
 
 1. **Start the BPP services:**
    ```bash
-   docker-compose -f docker-compose-bpp.yml up -d
+   docker-compose -f docker-compose-onix-bpp-plugin.yml up -d
    ```
 
 2. **Verify services are running:**
@@ -76,7 +76,7 @@ docker/monolithic/api/
 
 3. **Check logs:**
    ```bash
-   docker-compose -f docker-compose-bpp.yml logs -f onix-bpp-plugin
+   docker-compose -f docker-compose-onix-bpp-plugin.yml logs -f onix-bpp-plugin
    ```
 
 4. **Access the BPP adapter:**
@@ -93,7 +93,11 @@ docker/monolithic/api/
 - **HTTP Port**: `8001`
 - **Modules**:
   - `bapTxnReceiver`: Receives callbacks from CDS (Phase 1) and BPPs (Phase 2+)
+    - Path: `/bap/receiver/`
+    - Handles: `on_discover`, `on_select`, `on_init`, `on_confirm`, etc.
   - `bapTxnCaller`: Entry point for requests from BAP application
+    - Path: `/bap/caller/`
+    - Handles: `discover`, `select`, `init`, `confirm`, etc.
 
 #### Routing Configuration
 
@@ -113,7 +117,11 @@ docker/monolithic/api/
 - **HTTP Port**: `8002`
 - **Modules**:
   - `bppTxnReceiver`: Receives requests from CDS (Phase 1) and BAP-ONIX (Phase 2+)
+    - Path: `/bpp/receiver/`
+    - Handles: `discover`, `select`, `init`, `confirm`, etc.
   - `bppTxnCaller`: Sends responses to CDS/ONIX
+    - Path: `/bpp/caller/`
+    - Handles: `on_discover`, `on_select`, `on_init`, `on_confirm`, etc.
 
 #### Routing Configuration
 
@@ -157,11 +165,14 @@ The adapter uses the following environment variables:
 
 ## Volume Mounts
 
-1. **Config Directory**: `../config/onix-{bap|bpp}:/app/config/onix-{bap|bpp}`
-2. **Adapter Config**: `../config/onix-{bap|bpp}/adapter.yaml:/app/config/adapter.yaml:ro`
-3. **Schema Directory**: `../schema:/app/schemas:ro`
+1. **Config Directory**: `../config/onix-{bap|bpp}:/app/config/onix-{bap|bpp}` - Mounts the entire config directory for routing files
+2. **Adapter Config**: `../config/onix-{bap|bpp}/adapter.yaml:/app/config/adapter.yaml:ro` - Mounts adapter.yaml to the expected location
+3. **Schema Directory**: `../../schemas:/app/schemas:ro` - Mounts schema files from the root `schemas/` directory for validation
 
-**Note**: Adjust the relative paths based on your project structure.
+**Note**: 
+- Config paths are relative to the `docker/monolithic/api/` directory
+- Schema path `../../schemas` points to the root-level `schemas/` directory containing `ev_charging_network/v1.0.0/` schema files
+- All config files are mounted read-only except the config directory itself (for symlink creation)
 
 ## Network Configuration
 
@@ -173,13 +184,13 @@ Both services use the `onix-network` bridge network for inter-container communic
 
 ```bash
 # Stop BAP services
-docker-compose -f docker-compose-bap.yml down
+docker-compose -f docker-compose-onix-bap-plugin.yml down
 
 # Stop BPP services
-docker-compose -f docker-compose-bpp.yml down
+docker-compose -f docker-compose-onix-bpp-plugin.yml down
 
 # Stop both and remove volumes
-docker-compose -f docker-compose-bap.yml -f docker-compose-bpp.yml down -v
+docker-compose -f docker-compose-onix-bap-plugin.yml -f docker-compose-onix-bpp-plugin.yml down -v
 ```
 
 ## Troubleshooting
@@ -206,8 +217,8 @@ docker-compose -f docker-compose-bap.yml -f docker-compose-bpp.yml down -v
 
 3. **Check container logs:**
    ```bash
-   docker-compose -f docker-compose-bap.yml logs
-   docker-compose -f docker-compose-bpp.yml logs
+   docker-compose -f docker-compose-onix-bap-plugin.yml logs
+   docker-compose -f docker-compose-onix-bpp-plugin.yml logs
    ```
 
 ### Configuration Issues
@@ -233,14 +244,14 @@ docker-compose -f docker-compose-bap.yml -f docker-compose-bpp.yml down -v
 
 2. **Check Redis logs:**
    ```bash
-   docker-compose -f docker-compose-bap.yml logs redis-onix-bap
+   docker-compose -f docker-compose-onix-bap-plugin.yml logs redis-onix-bap
    ```
 
 ## Customization
 
 ### Changing Ports
 
-Edit the `ports` section in `docker-compose-{bap|bpp}.yml`:
+Edit the `ports` section in `docker-compose-onix-{bap|bpp}-plugin.yml`:
 
 ```yaml
 ports:
@@ -253,12 +264,12 @@ ports:
 1. Modify the YAML files in `config/onix-{bap|bpp}/`
 2. Restart the services:
    ```bash
-   docker-compose -f docker-compose-{bap|bpp}.yml restart
+   docker-compose -f docker-compose-onix-{bap|bpp}-plugin.yml restart
    ```
 
 ### Using Custom Images
 
-Update the `image` field in `docker-compose-{bap|bpp}.yml`:
+Update the `image` field in `docker-compose-onix-{bap|bpp}-plugin.yml`:
 
 ```yaml
 image: your-registry/onix-{bap|bpp}-plugin:your-tag
