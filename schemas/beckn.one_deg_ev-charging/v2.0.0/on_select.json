@@ -9,7 +9,7 @@
         "domain": {
           "type": "string",
           "description": "Identifier of the domain",
-          "pattern": "^(dent:ev-charging:|ev_charging_network)"
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "action": {
           "type": "string",
@@ -100,6 +100,136 @@
         "order": {
           "type": "object",
           "properties": {
+            "@context": {
+              "type": "string",
+              "format": "uri",
+              "description": "JSON-LD context"
+            },
+            "@type": {
+              "type": "string",
+              "enum": ["beckn:Order"],
+              "description": "Order type"
+            },
+            "beckn:id": {
+              "type": "string",
+              "description": "Order identifier"
+            },
+            "beckn:orderStatus": {
+              "type": "string",
+              "description": "Order status"
+            },
+            "beckn:orderNumber": {
+              "type": "string",
+              "description": "Order number"
+            },
+            "beckn:seller": {
+              "type": "string",
+              "description": "Seller identifier"
+            },
+            "beckn:buyer": {
+              "type": ["string", "object"],
+              "description": "Buyer identifier or object"
+            },
+            "beckn:orderItems": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "minItems": 1
+            },
+            "beckn:orderValue": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "components": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              },
+              "required": ["currency", "value"]
+            },
+            "beckn:fulfillment": {
+              "type": "object",
+              "properties": {
+                "@context": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "@type": {
+                  "type": "string",
+                  "enum": ["beckn:Fulfillment"]
+                },
+                "beckn:id": {
+                  "type": "string"
+                },
+                "beckn:mode": {
+                  "type": "string"
+                },
+                "beckn:status": {
+                  "type": "string"
+                },
+                "beckn:deliveryAttributes": {
+                  "type": "object"
+                }
+              }
+            },
+            "beckn:payment": {
+              "type": "object",
+              "properties": {
+                "@context": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "@type": {
+                  "type": "string",
+                  "enum": ["beckn:Payment"]
+                },
+                "beckn:id": {
+                  "type": "string"
+                },
+                "beckn:status": {
+                  "type": "string"
+                },
+                "beckn:amount": {
+                  "type": "object",
+                  "properties": {
+                    "currency": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["currency", "value"]
+                },
+                "beckn:paymentURL": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "beckn:txnRef": {
+                  "type": "string"
+                },
+                "beckn:acceptedPaymentMethods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "beckn:beneficiary": {
+                  "type": "string"
+                }
+              }
+            },
+            "beckn:orderAttributes": {
+              "type": "object"
+            },
             "provider": {
               "type": "object",
               "properties": {
@@ -371,7 +501,7 @@
               "required": ["price", "breakup"]
             }
           },
-          "required": ["provider", "items", "quote"]
+          "required": []
         }
       },
       "required": ["order"]

@@ -3,7 +3,8 @@ server:
 
 
 defaults:
-  version: "1.0.0"
+  version: "2.0.0"
+  domain: "beckn.one:deg:ev-charging"
   country_code: "IND"
   city_code: "std:080"
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "confirm",
+  "$id": "on_confirm",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["confirm"],
-          "description": "API endpoint to be called"
+          "enum": ["on_confirm"],
+          "description": "API endpoint callback"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -74,7 +75,7 @@
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "Time at which the request was generated"
+          "description": "Time at which the response was generated"
         },
         "ttl": {
           "type": "string",
@@ -124,43 +125,7 @@
               "description": "Seller identifier"
             },
             "beckn:buyer": {
-              "type": "object",
-              "properties": {
-                "@context": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "@type": {
-                  "type": "string",
-                  "enum": ["beckn:Party"]
-                },
-                "beckn:id": {
-                  "type": "string"
-                },
-                "beckn:role": {
-                  "type": "string",
-                  "enum": ["BUYER"]
-                },
-                "beckn:name": {
-                  "type": "string"
-                },
-                "beckn:organization": {
-                  "type": "object"
-                },
-                "beckn:address": {
-                  "type": "string"
-                },
-                "beckn:email": {
-                  "type": "string",
-                  "format": "email"
-                },
-                "beckn:phone": {
-                  "type": "string"
-                },
-                "beckn:taxId": {
-                  "type": "string"
-                }
-              }
+              "type": "object"
             },
             "beckn:orderItems": {
               "type": "array",
@@ -253,6 +218,10 @@
                 },
                 "beckn:beneficiary": {
                   "type": "string"
+                },
+                "beckn:paidAt": {
+                  "type": "string",
+                  "format": "date-time"
                 }
               }
             },
@@ -260,10 +229,27 @@
               "type": "object"
             }
           },
-          "required": ["@type"]
+          "required": ["@type", "beckn:id"]
         }
       },
       "required": ["order"]
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": ["context", "message"],

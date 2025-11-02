@@ -18,7 +18,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"cancel\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"bpp_id\": \"{{bpp_id}}\",\n    \"bpp_uri\": \"{{bpp_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"order\": [\n      {\n        \"@type\": \"beckn:Order\",\n        \"beckn:id\": \"b989c9a9-f603-4d44-b38d-26fd72286b38\",\n        \"beckn:orderItems\": [\n          {\n            \"beckn:orderedItem\": \"pe-charging-01\"\n          }\n        ]\n      }\n    ]\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"cancel\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"bpp_id\": \"{{bpp_id}}\",\n    \"bpp_uri\": \"{{bpp_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"order\": [\n      {\n        \"@type\": \"beckn:Order\",\n        \"beckn:id\": \"b989c9a9-f603-4d44-b38d-26fd72286b38\",\n        \"beckn:orderItems\": [\n          {\n            \"beckn:orderedItem\": \"pe-charging-01\"\n          }\n        ]\n      }\n    ]\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -26,13 +26,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/cancel",
+					"raw": "{{cancel_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{cancel_url}}"
 					],
-					"path": [
-						"cancel"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -52,44 +50,6 @@
 				"type": "text/javascript",
 				"exec": [""]
 			}
-		}
-	],
-	"variable": [
-		{
-			"key": "domain",
-			"value": "beckn.one:deg:ev-charging:2.0.0"
-		},
-		{
-			"key": "version",
-			"value": "2.0.0"
-		},
-		{
-			"key": "bap_id",
-			"value": "ev-charging.sandbox1.com"
-		},
-		{
-			"key": "bap_uri",
-			"value": "http://onix-bap:8081/bap/receiver"
-		},
-		{
-			"key": "bpp_id",
-			"value": "ev-charging.sandbox2.com"
-		},
-		{
-			"key": "bpp_uri",
-			"value": "http://onix-bpp:8082/bpp/receiver"
-		},
-		{
-			"key": "bap_adapter_url",
-			"value": "http://localhost:8081/bap/caller"
-		},
-		{
-			"key": "transaction_id",
-			"value": "2b4d69aa-22e4-4c78-9f56-5a7b9e2b2002"
-		},
-		{
-			"key": "bpp_adapter_url",
-			"value": "http://localhost:8082/bpp/caller"
 		}
 	]
 }

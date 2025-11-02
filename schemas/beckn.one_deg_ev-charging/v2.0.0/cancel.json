@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "on_rating",
+  "$id": "cancel",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["on_rating"],
-          "description": "API endpoint callback"
+          "enum": ["cancel"],
+          "description": "API endpoint to be called"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -74,7 +75,7 @@
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "Time at which the response was generated"
+          "description": "Time at which the request was generated"
         },
         "ttl": {
           "type": "string",
@@ -94,50 +95,40 @@
     "message": {
       "type": "object",
       "properties": {
-        "feedback": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "Feedback identifier"
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "@type": {
+                "type": "string",
+                "enum": ["beckn:Order"],
+                "description": "Order type"
+              },
+              "beckn:id": {
+                "type": "string",
+                "description": "Order identifier"
+              },
+              "beckn:orderItems": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "beckn:orderedItem": {
+                      "type": "string",
+                      "description": "Ordered item identifier"
+                    }
+                  },
+                  "required": ["beckn:orderedItem"]
+                }
+              }
             },
-            "feedback_form": {
-              "type": "object",
-              "description": "Feedback form details"
-            }
-          }
-        },
-        "rating": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "Rating identifier"
-            },
-            "value": {
-              "type": "number",
-              "description": "Rating value"
-            }
-          }
+            "required": ["@type", "beckn:id"]
+          },
+          "minItems": 1
         }
-      }
-    },
-    "error": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "code": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      }
+      },
+      "required": ["order"]
     }
   },
   "required": ["context", "message"],

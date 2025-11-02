@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "cancel",
+  "$id": "support",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["cancel"],
+          "enum": ["support"],
           "description": "API endpoint to be called"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -94,40 +95,17 @@
     "message": {
       "type": "object",
       "properties": {
-        "order": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "@type": {
-                "type": "string",
-                "enum": ["beckn:Order"],
-                "description": "Order type"
-              },
-              "beckn:id": {
-                "type": "string",
-                "description": "Order identifier"
-              },
-              "beckn:orderItems": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "beckn:orderedItem": {
-                      "type": "string",
-                      "description": "Ordered item identifier"
-                    }
-                  },
-                  "required": ["beckn:orderedItem"]
-                }
-              }
-            },
-            "required": ["@type", "beckn:id"]
-          },
-          "minItems": 1
+        "ref_id": {
+          "type": "string",
+          "description": "Reference ID (e.g., order ID)"
+        },
+        "ref_type": {
+          "type": "string",
+          "enum": ["order", "fulfillment", "item", "payment"],
+          "description": "Type of reference"
         }
       },
-      "required": ["order"]
+      "required": ["ref_id", "ref_type"]
     }
   },
   "required": ["context", "message"],

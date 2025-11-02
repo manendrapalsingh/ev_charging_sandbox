@@ -17,7 +17,8 @@
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -248,7 +249,7 @@
                           },
                           "@type": {
                             "type": "string",
-                            "enum": ["schema:Place"]
+                            "enum": ["schema:Place", "beckn:Location"]
                           },
                           "beckn:id": {
                             "type": "string"
@@ -309,10 +310,34 @@
                                 "type": "string"
                               },
                               "city": {
-                                "type": "string"
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "code": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                ]
                               },
                               "country": {
-                                "type": "string"
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "code": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                ]
                               },
                               "door": {
                                 "type": "string"
@@ -324,7 +349,19 @@
                                 "type": "string"
                               },
                               "state": {
-                                "type": "string"
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "code": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                ]
                               },
                               "street": {
                                 "type": "string"
@@ -436,7 +473,14 @@
                                 "type": "string"
                               },
                               "value": {
-                                "type": "string"
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ]
                               },
                               "applicableQuantity": {
                                 "type": "object",

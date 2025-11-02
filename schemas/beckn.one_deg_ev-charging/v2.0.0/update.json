@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "on_init",
+  "$id": "update",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["on_init"],
-          "description": "API endpoint callback"
+          "enum": ["update"],
+          "description": "API endpoint to be called"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -74,7 +75,7 @@
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "Time at which the response was generated"
+          "description": "Time at which the request was generated"
         },
         "ttl": {
           "type": "string",
@@ -130,8 +131,7 @@
               "type": "array",
               "items": {
                 "type": "object"
-              },
-              "minItems": 1
+              }
             },
             "beckn:orderValue": {
               "type": "object",
@@ -209,6 +209,10 @@
                 "beckn:txnRef": {
                   "type": "string"
                 },
+                "beckn:paidAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
                 "beckn:acceptedPaymentMethods": {
                   "type": "array",
                   "items": {
@@ -222,71 +226,12 @@
             },
             "beckn:orderAttributes": {
               "type": "object"
-            },
-            "quote": {
-              "type": "object",
-              "properties": {
-                "price": {
-                  "type": "object",
-                  "properties": {
-                    "currency": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["currency", "value"]
-                },
-                "breakup": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "price": {
-                        "type": "object",
-                        "properties": {
-                          "currency": {
-                            "type": "string"
-                          },
-                          "value": {
-                            "type": "string"
-                          }
-                        },
-                        "required": ["currency", "value"]
-                      },
-                      "title": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["price", "title"]
-                  }
-                }
-              },
-              "required": ["price", "breakup"]
             }
           },
-          "required": ["@type", "beckn:orderItems", "beckn:fulfillment", "quote"]
+          "required": ["@type", "beckn:id"]
         }
       },
       "required": ["order"]
-    },
-    "error": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "code": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      }
     }
   },
   "required": ["context", "message"],

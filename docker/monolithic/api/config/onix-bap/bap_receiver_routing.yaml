@@ -7,8 +7,8 @@
 
 routingRules:
   # Phase 1: on_discover callback to BAP (routed to mock-bap for testing)
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: url
     target:
       url: http://mock-bap:9001
@@ -17,8 +17,8 @@ routingRules:
       - on_discover
       
   # Phase 2+: Other callbacks to BAP (routed to mock-bap for testing)
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: url
     target:
       url: http://mock-bap:9001

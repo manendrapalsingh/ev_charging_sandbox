@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "rating",
+  "$id": "on_rating",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["rating"],
-          "description": "API endpoint to be called"
+          "enum": ["on_rating"],
+          "description": "API endpoint callback"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -74,7 +75,7 @@
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "Time at which the request was generated"
+          "description": "Time at which the response was generated"
         },
         "ttl": {
           "type": "string",
@@ -94,46 +95,50 @@
     "message": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Rating identifier (e.g., fulfillment ID)"
-        },
-        "value": {
-          "type": "number",
-          "description": "Rating value",
-          "minimum": 1
-        },
-        "best": {
-          "type": "number",
-          "description": "Best possible rating value"
-        },
-        "worst": {
-          "type": "number",
-          "description": "Worst possible rating value"
-        },
-        "category": {
-          "type": "string",
-          "enum": ["fulfillment", "provider", "item"],
-          "description": "Category of the rating"
-        },
         "feedback": {
           "type": "object",
           "properties": {
-            "comments": {
+            "id": {
               "type": "string",
-              "description": "Textual feedback comments"
+              "description": "Feedback identifier"
             },
-            "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Feedback tags"
+            "feedback_form": {
+              "type": "object",
+              "description": "Feedback form details"
+            }
+          }
+        },
+        "rating": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Rating identifier"
+            },
+            "value": {
+              "type": "number",
+              "description": "Rating value"
             }
           }
         }
-      },
-      "required": ["id", "value"]
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": ["context", "message"],

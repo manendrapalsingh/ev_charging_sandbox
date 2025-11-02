@@ -65,7 +65,7 @@ paths:
                   context:
                     version: "2.0.0"
                     action: "discover"
-                    domain: "beckn.one:deg:ev-charging:2.0.0"
+                    domain: "beckn.one:deg:ev-charging"
                     location:
                       country:
                         code: "IND"
@@ -447,7 +447,7 @@ components:
         domain:
           type: string
           description: Identifier of the domain
-          example: "beckn.one:deg:ev-charging:2.0.0"
+          example: "beckn.one:deg:ev-charging"
         location:
           $ref: '#/components/schemas/Location'
         bap_id:

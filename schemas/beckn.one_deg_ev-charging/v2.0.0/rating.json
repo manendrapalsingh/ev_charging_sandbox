@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "on_cancel",
+  "$id": "rating",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["on_cancel"],
-          "description": "API endpoint callback"
+          "enum": ["rating"],
+          "description": "API endpoint to be called"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -74,7 +75,7 @@
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "Time at which the response was generated"
+          "description": "Time at which the request was generated"
         },
         "ttl": {
           "type": "string",
@@ -94,81 +95,46 @@
     "message": {
       "type": "object",
       "properties": {
-        "order": {
+        "id": {
+          "type": "string",
+          "description": "Rating identifier (e.g., fulfillment ID)"
+        },
+        "value": {
+          "type": "number",
+          "description": "Rating value",
+          "minimum": 1
+        },
+        "best": {
+          "type": "number",
+          "description": "Best possible rating value"
+        },
+        "worst": {
+          "type": "number",
+          "description": "Worst possible rating value"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["fulfillment", "provider", "item"],
+          "description": "Category of the rating"
+        },
+        "feedback": {
           "type": "object",
           "properties": {
-            "@context": {
+            "comments": {
               "type": "string",
-              "format": "uri",
-              "description": "JSON-LD context"
+              "description": "Textual feedback comments"
             },
-            "@type": {
-              "type": "string",
-              "enum": ["beckn:Order"],
-              "description": "Order type"
-            },
-            "beckn:id": {
-              "type": "string",
-              "description": "Order identifier"
-            },
-            "beckn:orderStatus": {
-              "type": "string",
-              "description": "Order status (typically CANCELLED)"
-            },
-            "beckn:cancellation": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": ["FULL", "PARTIAL"]
-                },
-                "refund_amount": {
-                  "type": "object",
-                  "properties": {
-                    "currency": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["currency", "value"]
-                },
-                "cancelled_by": {
-                  "type": "string",
-                  "enum": ["BUYER", "SELLER", "SYSTEM"]
-                },
-                "cancellation_reason_id": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                }
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
               },
-              "required": ["type", "cancelled_by"]
+              "description": "Feedback tags"
             }
-          },
-          "required": ["@type", "beckn:id"]
+          }
         }
       },
-      "required": ["order"]
-    },
-    "error": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "code": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      }
+      "required": ["id", "value"]
     }
   },
   "required": ["context", "message"],

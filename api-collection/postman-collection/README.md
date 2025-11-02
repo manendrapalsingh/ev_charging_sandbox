@@ -1,40 +1,141 @@
-# Postman Collections for EV Charging APIs
+# API Collections for EV Charging APIs
 
-This directory contains Postman collections for testing EV Charging APIs following the Beckn Protocol specification. The collections are organized by participant type (BAP and BPP) and include both individual API collections and combined collections.
+This directory contains API collections for EV Charging APIs following the Beckn Protocol specification. It includes both **Postman collections** for testing and **Swagger/OpenAPI specifications** for API documentation.
 
-## Directory Structure
+## API Collection Directory Structure
 
 ```
-postman-collection/
-├── bap/                          # Buyer App Provider collections
-│   ├── all-api/                  # Combined collection of all BAP APIs
-│   ├── discover/                 # Discover charging stations
-│   ├── select/                   # Select a charging station
-│   ├── init/                     # Initialize a charging session
-│   ├── confirm/                  # Confirm a booking
-│   ├── update/                   # Update booking details
-│   ├── cancel/                   # Cancel a booking
-│   ├── track/                    # Track charging session status
-│   ├── support/                  # Support queries
-│   └── rating/                   # Submit ratings
+api-collection/
+├── postman-collection/           # Postman collections for API testing
+│   ├── bap/                      # Buyer App Provider collections
+│   │   ├── all-api/              # Combined collection of all BAP APIs
+│   │   ├── discover/             # Discover charging stations
+│   │   ├── select/               # Select a charging station
+│   │   ├── init/                 # Initialize a charging session
+│   │   ├── confirm/              # Confirm a booking
+│   │   ├── update/               # Update booking details
+│   │   ├── cancel/               # Cancel a booking
+│   │   ├── track/                # Track charging session status
+│   │   ├── support/              # Support queries
+│   │   └── rating/               # Submit ratings
+│   │
+│   └── bpp/                      # Buyer Platform Provider collections
+│       ├── all-apis/             # Combined collection of all BPP APIs
+│       ├── on_discover/          # Response to discover request
+│       ├── on_select/            # Response to select request
+│       ├── on_init/              # Response to init request
+│       ├── on_confirm/            # Response to confirm request
+│       ├── on_update/            # Response to update request
+│       ├── on_cancel/            # Response to cancel request
+│       ├── on_track/             # Response to track request
+│       ├── on_status/            # Status update callback
+│       ├── on_support/           # Response to support request
+│       └── on_rating/            # Response to rating request
 │
-└── bpp/                          # Buyer Platform Provider collections
-    ├── all-apis/                 # Combined collection of all BPP APIs
-    ├── on_discover/              # Response to discover request
-    ├── on_select/                # Response to select request
-    ├── on_init/                  # Response to init request
-    ├── on_confirm/               # Response to confirm request
-    ├── on_update/                # Response to update request
-    ├── on_cancel/                # Response to cancel request
-    ├── on_track/                 # Response to track request
-    ├── on_status/                # Status update callback
-    ├── on_support/               # Response to support request
-    └── on_rating/                # Response to rating request
+└── swagger/                      # OpenAPI/Swagger specifications
+    ├── bap.yaml                  # BAP API OpenAPI specification
+    └── bpp.yaml                  # BPP API OpenAPI specification
 ```
 
-## Overview
+## Swagger/OpenAPI Specifications
 
-### BAP (Buyer App Provider) Collections
+The `swagger/` directory contains OpenAPI 3.0.3 specifications for both BAP and BPP APIs. These specifications provide comprehensive API documentation with request/response schemas, examples, and detailed descriptions.
+
+### Available Swagger Files
+
+#### `bap.yaml` - BAP API Specification
+- **Title**: BAP - EV Charging Network API
+- **Version**: 1.0.0
+- **Description**: Beckn Application Platform (BAP) API specification for EV Charging Network
+- **Endpoints Documented**:
+  - `/discover` - Discover EV charging stations
+  - `/select` - Select a charging station
+  - `/init` - Initialize a charging session
+  - `/confirm` - Confirm a booking
+  - `/update` - Update booking details
+  - `/cancel` - Cancel a booking
+  - `/track` - Track charging session status
+  - `/support` - Support queries
+  - `/rating` - Submit ratings
+
+**Key Features**:
+- Asynchronous communication pattern documentation
+- Request/response schemas with validation
+- Example payloads
+- Error response definitions
+- Server configurations for local and Docker environments
+
+#### `bpp.yaml` - BPP API Specification
+- **Title**: BPP - EV Charging Network API
+- **Version**: 1.0.0
+- **Description**: Beckn Provider Platform (BPP) API specification for EV Charging Network
+- **Endpoints Documented**:
+  - `/on_discover` - Response to discover request
+  - `/on_select` - Response to select request
+  - `/on_init` - Response to init request
+  - `/on_confirm` - Response to confirm request
+  - `/on_update` - Response to update request
+  - `/on_cancel` - Response to cancel request
+  - `/on_track` - Response to track request
+  - `/on_status` - Status update callbacks
+  - `/on_support` - Response to support queries
+  - `/on_rating` - Response to rating submission
+
+**Key Features**:
+- Callback endpoint documentation
+- Async response flow documentation
+- Request/response schemas with validation
+- Example payloads
+- Server configurations for receiver and caller endpoints
+
+### Using Swagger/OpenAPI Specifications
+
+#### Option 1: View in Swagger UI
+1. Install Swagger UI:
+   ```bash
+   npm install -g swagger-ui-serve
+   ```
+2. Serve the specification:
+   ```bash
+   swagger-ui-serve swagger/bap.yaml
+   swagger-ui-serve swagger/bpp.yaml
+   ```
+3. Open your browser to `http://localhost:3000` to view the interactive API documentation
+
+#### Option 2: Use Online Swagger Editor
+1. Go to [https://editor.swagger.io/](https://editor.swagger.io/)
+2. Copy and paste the contents of `bap.yaml` or `bpp.yaml`
+3. View the interactive documentation
+
+#### Option 3: Import into API Testing Tools
+- **Postman**: Import the YAML files directly into Postman
+- **Insomnia**: Import as OpenAPI specification
+- **REST Client Tools**: Most modern API clients support OpenAPI import
+
+#### Option 4: Generate Client SDKs
+Use code generation tools like:
+- [OpenAPI Generator](https://openapi-generator.tech/)
+- [Swagger Codegen](https://swagger.io/tools/swagger-codegen/)
+
+Example:
+```bash
+openapi-generator generate -i swagger/bap.yaml -g python -o ./generated/bap-client
+```
+
+### Swagger Documentation Features
+
+- **Asynchronous Communication**: Detailed documentation of the async request/response pattern
+- **Request Validation**: Complete schema definitions for all request bodies
+- **Response Schemas**: Detailed response structures with examples
+- **Error Handling**: Comprehensive error response definitions
+- **Server Configurations**: Pre-configured server URLs for different environments
+- **Tags and Categories**: APIs organized by functional groups (Discovery, Order Management, Tracking, Support)
+
+## Postman Collections
+
+### Overview
+
+#### BAP (Buyer App Provider) Collections
 
 BAP collections contain APIs that the buyer application (user-facing app) uses to interact with charging service providers. These are outbound requests from the buyer app.
 
@@ -49,7 +150,7 @@ BAP collections contain APIs that the buyer application (user-facing app) uses t
 - **support**: Get support information or raise support requests
 - **rating**: Submit ratings and feedback for a completed session
 
-### BPP (Buyer Platform Provider) Collections
+#### BPP (Buyer Platform Provider) Collections
 
 BPP collections contain callback APIs that the seller platform (charging provider) uses to respond to buyer requests. These are inbound responses/callbacks to the buyer app.
 
@@ -192,9 +293,11 @@ A typical EV charging flow using these collections:
 ## Related Documentation
 
 - Beckn Protocol Specification: [https://github.com/beckn/protocol-specifications](https://github.com/beckn/protocol-specifications)
-- EV Charging Domain Schema: Available in `/schemas/ev_charging_network/v1.0.0/`
-- Swagger Documentation: Available in `/api-collection/swagger/`
+- EV Charging Domain Schema: Available in `/schemas/beckn.one_deg_ev-charging/v2.0.0/`
+- Swagger/OpenAPI Specifications: 
+  - BAP API: `/api-collection/swagger/bap.yaml`
+  - BPP API: `/api-collection/swagger/bpp.yaml`
 
 ## Support
 
-For issues or questions related to these Postman collections, please refer to the main project README or contact the development team.
+For issues or questions related to these API collections (Postman or Swagger), please refer to the main project README or contact the development team.
