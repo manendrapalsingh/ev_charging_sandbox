@@ -98,8 +98,9 @@ The **onix-adapter** is a production-ready, plugin-based middleware adapter for 
 
 Start with the **Complete Sandbox** for a full testing environment with all services:
 
+**Monolithic Architecture** (Single service per endpoint):
 ```bash
-# Navigate to the sandbox directory
+# Navigate to the monolithic sandbox directory
 cd sandbox/docker/monolithic/api
 
 # Start all services (ONIX adapters, mock services, Redis)
@@ -112,12 +113,30 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-For detailed instructions, see: **[Sandbox Integration Guide](./sandbox/docker/monolithic/api/README.md)**
+For detailed instructions, see: **[Monolithic Sandbox Integration Guide](./sandbox/docker/monolithic/api/README.md)**
+
+**Microservice Architecture** (Single adapter with endpoint-based routing):
+```bash
+# Navigate to the microservice sandbox directory
+cd sandbox/docker/microservice/api
+
+# Start all services (ONIX adapters, multiple mock services, Redis)
+docker-compose up -d
+
+# Verify services are running
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+For detailed instructions, see: **[Microservice Sandbox Integration Guide](./sandbox/docker/microservice/api/README.md)**
 
 #### Option 2: Standalone ONIX Adapters
 
 For deploying only the ONIX adapters without mock services:
 
+**Monolithic Architecture**:
 ```bash
 # Navigate to the monolithic API directory
 cd docker/monolithic/api
@@ -134,6 +153,24 @@ docker-compose -f docker-compose-onix-bpp-plugin.yml ps
 ```
 
 For detailed instructions, see: **[Monolithic API Integration Guide](./docker/monolithic/api/README.md)**
+
+**Microservice Architecture**:
+```bash
+# Navigate to the microservice API directory
+cd docker/microservice/api
+
+# Start BAP services
+docker-compose -f docker-compose-onix-bap-plugin.yml up -d
+
+# Start BPP services (in a separate terminal)
+docker-compose -f docker-compose-onix-bpp-plugin.yml up -d
+
+# Verify services are running
+docker-compose -f docker-compose-onix-bap-plugin.yml ps
+docker-compose -f docker-compose-onix-bpp-plugin.yml ps
+```
+
+For detailed instructions, see: **[Microservice API Integration Guide](./docker/microservice/api/README.md)**
 
 ---
 
@@ -201,8 +238,9 @@ Phase 2+: Direct BPP Communication
 ### 1. Docker Container Integration
 
 #### 1.0 Sandbox Environments
-- **[1.0.1 Complete Sandbox](./sandbox/docker/monolithic/api/README.md)** ✅ **Ready** - Full testing environment with all services
-- [1.0.2 Standalone Mock Services](./sandbox/) - Individual mock service deployments
+- **[1.0.1 Monolithic Sandbox](./sandbox/docker/monolithic/api/README.md)** ✅ **Ready** - Full testing environment with monolithic architecture
+- **[1.0.2 Microservice Sandbox](./sandbox/docker/microservice/api/README.md)** ✅ **Ready** - Full testing environment with microservice architecture
+- [1.0.3 Standalone Mock Services](./sandbox/) - Individual mock service deployments
 
 #### 1.1 Monolithic Architecture
 - **[1.1.1 API Integration](./docker/monolithic/api/README.md)** ✅ **Ready** - Standalone ONIX adapters
@@ -210,7 +248,7 @@ Phase 2+: Direct BPP Communication
 - [1.1.3 Kafka Integration](./docker/monolithic/kafka/README.md)
 
 #### 1.2 Microservice Architecture
-- [1.2.1 API Integration](./docker/microservice/api/README.md)
+- **[1.2.1 API Integration](./docker/microservice/api/README.md)** ✅ **Ready** - Standalone ONIX adapters with endpoint-based routing
 - [1.2.2 RabbitMQ Integration](./docker/microservice/rabbitmq/README.md)
 - [1.2.3 Kafka Integration](./docker/microservice/kafka/README.md)
 
@@ -252,13 +290,25 @@ ev_charging_sandbox/
 │   │   ├── rabbitmq/                 # Monolithic RabbitMQ integration
 │   │   └── kafka/                    # Monolithic Kafka integration
 │   └── microservice/
-│       ├── api/                      # Microservice API integration
+│       ├── api/                      # ✅ Microservice API integration
+│       │   ├── docker-compose-onix-bap-plugin.yml
+│       │   ├── docker-compose-onix-bpp-plugin.yml
+│       │   ├── config/
+│       │   │   ├── onix-bap/
+│       │   │   │   ├── adapter.yaml
+│       │   │   │   ├── bap_caller_routing.yaml
+│       │   │   │   └── bap_receiver_routing.yaml
+│       │   │   └── onix-bpp/
+│       │   │       ├── adapter.yaml
+│       │   │       ├── bpp_caller_routing.yaml
+│       │   │       └── bpp_receiver_routing.yaml
+│       │   └── README.md
 │       ├── rabbitmq/                 # Microservice RabbitMQ integration
 │       └── kafka/                    # Microservice Kafka integration
-├── sandbox/                          # ✅ Complete sandbox environment
+├── sandbox/                          # ✅ Complete sandbox environments
 │   ├── docker/
 │   │   ├── monolithic/
-│   │   │   ├── api/                  # Unified sandbox with all services
+│   │   │   ├── api/                  # Monolithic sandbox with all services
 │   │   │   │   ├── docker-compose.yml
 │   │   │   │   ├── onix-bap_config.yml
 │   │   │   │   ├── onix-bpp_config.yml
@@ -270,6 +320,17 @@ ev_charging_sandbox/
 │   │   │   ├── kafka/
 │   │   │   └── rabbitmq/
 │   │   └── microservice/
+│   │       ├── api/                  # Microservice sandbox with all services
+│   │       │   ├── docker-compose.yml
+│   │       │   ├── onix-bap_config.yml
+│   │       │   ├── onix-bpp_config.yml
+│   │       │   ├── mock-registry_config.yml
+│   │       │   ├── mock-cds_config.yml
+│   │       │   ├── mock-bap_config.yml
+│   │       │   ├── mock-bpp_config.yml
+│   │       │   └── README.md
+│   │       ├── kafka/
+│   │       └── rabbitmq/
 │   ├── k8s/                          # Kubernetes sandbox deployments
 │   ├── mock-bap/                     # Standalone mock BAP service
 │   ├── mock-bpp/                     # Standalone mock BPP service
@@ -312,8 +373,9 @@ Each integration method includes:
 
 ### Complete Sandbox Environment
 
+**Monolithic Architecture:**
 ```bash
-# Navigate to the sandbox directory
+# Navigate to the monolithic sandbox directory
 cd sandbox/docker/monolithic/api
 
 # Start all services (ONIX adapters, mock services, Redis)
@@ -332,13 +394,42 @@ docker-compose logs -f onix-bap-plugin
 docker-compose down
 ```
 
-**Available Endpoints:**
+**Microservice Architecture:**
+```bash
+# Navigate to the microservice sandbox directory
+cd sandbox/docker/microservice/api
+
+# Start all services (ONIX adapters, multiple mock services, Redis)
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs for all services
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f onix-bap-plugin
+
+# Stop all services
+docker-compose down
+```
+
+**Available Endpoints (Monolithic):**
 - **ONIX BAP**: `http://localhost:8001/bap/caller/{action}` and `http://localhost:8001/bap/receiver/{action}`
 - **ONIX BPP**: `http://localhost:8002/bpp/caller/{action}` and `http://localhost:8002/bpp/receiver/{action}`
 - **Mock Registry**: `http://localhost:3030`
 - **Mock CDS**: `http://localhost:8082`
 - **Mock BAP**: `http://localhost:9001`
 - **Mock BPP**: `http://localhost:9002`
+
+**Available Endpoints (Microservice):**
+- **ONIX BAP**: `http://localhost:8001/bap/caller/{action}` and `http://localhost:8001/bap/receiver/{action}`
+- **ONIX BPP**: `http://localhost:8002/bpp/caller/{action}` and `http://localhost:8002/bpp/receiver/{action}`
+- **Mock Registry**: `http://localhost:3030`
+- **Mock CDS**: `http://localhost:8082`
+- **Mock BAP Services**: `http://localhost:9001-9010` (one per endpoint)
+- **Mock BPP Services**: `http://localhost:9011-9020` (one per endpoint)
 
 ### Standalone ONIX Adapters
 
@@ -440,12 +531,13 @@ curl -X POST http://localhost:8001/bap/caller/discover \
 ### Integration Guides
 
 #### Sandbox Environments
-- **[Complete Sandbox Guide](./sandbox/docker/monolithic/api/README.md)**: ✅ Complete sandbox with ONIX adapters, mock services, and infrastructure
+- **[Monolithic Sandbox Guide](./sandbox/docker/monolithic/api/README.md)**: ✅ Complete sandbox with monolithic architecture
+- **[Microservice Sandbox Guide](./sandbox/docker/microservice/api/README.md)**: ✅ Complete sandbox with microservice architecture
 - **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP, BPP, CDS, Registry)
 
 #### ONIX Adapter Integration
 - **[Monolithic API Integration](./docker/monolithic/api/README.md)**: ✅ Complete guide for standalone Docker-based ONIX adapter deployment
-- **[Microservice API Integration](./docker/microservice/api/README.md)**: Guide for microservice architecture (coming soon)
+- **[Microservice API Integration](./docker/microservice/api/README.md)**: ✅ Complete guide for microservice architecture with endpoint-based routing
 - **[RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)**: Message queue-based integration (coming soon)
 - **[Kafka Integration](./docker/monolithic/kafka/README.md)**: Event streaming integration (coming soon)
 
