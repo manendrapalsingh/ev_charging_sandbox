@@ -1,13 +1,13 @@
-# JSON Schemas for EV Charging Network APIs
+# beckn.one:deg:ev-charging Schema Documentation
 
-This directory contains JSON Schema definitions for the EV Charging Network domain, following the Beckn Protocol specification. These schemas define the structure, validation rules, and data types for all API requests and responses in the EV charging ecosystem.
+This directory contains JSON Schema definitions for the **beckn.one:deg:ev-charging** domain, following the Beckn Protocol specification. These schemas define the structure, validation rules, and data types for all API requests and responses in the EV charging ecosystem.
 
 ## Directory Structure
 
 ```
 schemas/
-└── ev_charging_network/
-    └── v1.0.0/
+└── beckn.one_deg_ev-charging/
+    └── v2.0.0/
         ├── all.json              # Combined schema with all API definitions
         ├── discover.json         # Discover charging stations schema
         ├── select.json           # Select charging station schema
@@ -31,23 +31,22 @@ schemas/
         └── on_rating.json        # Response to rating request
 ```
 
-## Schema Overview
+## Schema Version
 
-### Schema Standard
-
-All schemas in this directory follow the **JSON Schema Draft 2020-12** specification, identified by:
-
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
-}
-```
-
-### Version Information
-
-- **Domain**: EV Charging Network
-- **Current Version**: v1.0.0
+- **Domain**: beckn.one:deg:ev-charging
+- **Schema Version**: v2.0.0
 - **Protocol**: Beckn Protocol
+- **JSON Schema Standard**: Draft 2020-12
+
+## Domain Identifiers
+
+The schemas support multiple domain identifier formats for backward compatibility:
+
+- **`beckn.one:deg:ev-charging`** - Beckn One DEG format (recommended)
+- **`dent:ev-charging:`** - DENT format
+- **`ev_charging_network`** - Legacy format
+
+The domain pattern is validated as: `^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)`
 
 ## API Schema Categories
 
@@ -91,7 +90,7 @@ These schemas define responses/callbacks sent by the seller platform (charging p
 
 ## Schema Structure
 
-Each schema file follows a standard structure:
+Each schema file follows a standard Beckn Protocol structure:
 
 ```json
 {
@@ -107,19 +106,22 @@ Each schema file follows a standard structure:
           "type": "string",
           "enum": ["<action_name>"]
         },
-        "domain": { "type": "string" },
+        "domain": { 
+          "type": "string",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
+        },
         "location": { /* location object */ },
         "bap_id": { "type": "string" },
-        "bap_uri": { "type": "string" },
+        "bap_uri": { "type": "string", "format": "uri" },
         "bpp_id": { "type": "string" },
-        "bpp_uri": { "type": "string" },
+        "bpp_uri": { "type": "string", "format": "uri" },
         "transaction_id": { "type": "string" },
         "message_id": { "type": "string" },
-        "timestamp": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
         "ttl": { "type": "string" },
         "schema_context": { 
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string", "format": "uri" }
         }
       },
       "required": [ /* required context fields */ ]
@@ -131,45 +133,47 @@ Each schema file follows a standard structure:
       }
     }
   },
-  "required": ["context", "message"]
+  "required": ["context", "message"],
+  "additionalProperties": false
 }
 ```
 
-### Common Components
+### Context Object Requirements
 
-#### Context Object
-Every API request/response includes a `context` object containing:
+Every API request/response includes a `context` object with domain-specific requirements:
+
 - **version**: Beckn protocol version
-- **action**: The API action being performed
-- **domain**: Domain identifier (e.g., "EV_CHARGING")
-- **location**: Geographic location (country and city codes)
-- **bap_id** / **bap_uri**: Buyer App Provider identification and endpoint
-- **bpp_id** / **bpp_uri**: Buyer Platform Provider identification and endpoint
+- **action**: The API action being performed (enum restricted to specific action)
+- **domain**: Domain identifier matching pattern `^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)`
+- **location**: Geographic location object with:
+  - **country**: Object with `code` (ISO 3166-1 alpha-3 standard)
+  - **city**: Object with `code`
+- **bap_id** / **bap_uri**: Buyer App Provider identification and endpoint (URI format)
+- **bpp_id** / **bpp_uri**: Buyer Platform Provider identification and endpoint (URI format, required in BPP responses)
 - **transaction_id**: Unique transaction identifier
 - **message_id**: Unique message identifier
-- **timestamp**: ISO 8601 timestamp
-- **ttl**: Time-to-live for the message
+- **timestamp**: ISO 8601 date-time format
+- **ttl**: Time-to-live for the message (ISO 8601 duration format)
 - **schema_context**: Array of schema context URIs
 
-#### Message Object
-The `message` object contains action-specific data:
-- For `discover`: Search filters, spatial queries, etc.
-- For `on_discover`: Catalog of available charging stations
-- For `init`: Session initialization parameters
-- For `on_init`: Initialized session details
-- And so on for other actions...
+### Message Object
 
-## Usage
+The `message` object contains action-specific data for EV charging operations:
+- **discover**: Text search, spatial queries (Point, LineString, Polygon), and JSONPath filters
+- **on_discover**: Catalog of available charging stations
+- **init**: Session initialization parameters
+- **on_init**: Initialized session details with order, fulfillment, payment, and quote information
+- **track**: Session tracking queries
+- **on_track**: Current session status updates
+- And other action-specific payloads for the EV charging domain
 
-### Validation
+## Usage Examples
 
-These schemas can be used with any JSON Schema validator to validate API requests and responses. Popular validation libraries include:
+### Basic Validation
 
-#### JavaScript/TypeScript
 ```javascript
-// Using ajv (Another JSON Schema Validator)
 import Ajv from 'ajv';
-import discoverSchema from './schemas/ev_charging_network/v1.0.0/discover.json';
+import discoverSchema from './schemas/beckn.one_deg_ev-charging/v2.0.0/discover.json';
 
 const ajv = new Ajv();
 const validate = ajv.compile(discoverSchema);
@@ -180,13 +184,11 @@ if (!isValid) {
 }
 ```
 
-#### Python
 ```python
-# Using jsonschema
 from jsonschema import validate
 import json
 
-with open('schemas/ev_charging_network/v1.0.0/discover.json') as f:
+with open('schemas/beckn.one_deg_ev-charging/v2.0.0/discover.json') as f:
     schema = json.load(f)
 
 try:
@@ -196,59 +198,21 @@ except ValidationError as e:
     print(f"Validation error: {e.message}")
 ```
 
-#### Java
-```java
-// Using everit-org/json-schema
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.loader.SchemaLoader;
-import org.json.JSONObject;
+## Integration
 
-Schema schema = SchemaLoader.load(new JSONObject(schemaJson));
-schema.validate(new JSONObject(requestPayload));
-```
-
-### IDE Support
-
-Many IDEs and editors support JSON Schema for autocomplete and validation:
-
-- **VS Code**: Install the "JSON Schema Validator" extension
-- **IntelliJ IDEA**: Built-in JSON Schema support
-- **Postman**: Can import and use schemas for validation
-
-### Integration with Postman Collections
+### Postman Collections
 
 These schemas complement the Postman collections in `/api-collection/postman-collection/`. You can:
 1. Use the schemas to validate request/response payloads
 2. Generate mock data from schemas
 3. Set up automated schema validation in Postman tests
 
-### Code Generation
+### Request/Response Flow
 
-JSON Schemas can be used to generate code in various languages:
-- **TypeScript**: Using tools like `json-schema-to-typescript`
-- **Java**: Using tools like `jsonschema2pojo`
-- **Python**: Using tools like `datamodel-code-generator`
-
-Example with TypeScript:
-```bash
-npm install -g json-schema-to-typescript
-json2ts schemas/ev_charging_network/v1.0.0/discover.json -o types/discover.d.ts
-```
-
-## Schema Validation Best Practices
-
-1. **Always validate on both ends**: Validate requests at the BPP and responses at the BAP
-2. **Use strict validation**: Enable additional properties validation where possible
-3. **Version management**: Keep schemas versioned and maintain backward compatibility
-4. **Error handling**: Provide clear, actionable error messages from validation failures
-5. **Performance**: Cache compiled schemas in production environments
-
-## Request/Response Flow Example
-
-Here's how schemas are used in a typical flow:
+Typical EV charging flow with schema validation:
 
 1. **BAP sends discover request**
-   - Validates against `discover.json` before sending
+   - Validates against `beckn.one_deg_ev-charging/v2.0.0/discover.json` before sending
    - BPP validates against `discover.json` on receipt
 
 2. **BPP responds with on_discover**
@@ -261,42 +225,27 @@ Here's how schemas are used in a typical flow:
 
 ## Schema Maintenance
 
-### Updating Schemas
+### Version Updates
 
 When updating schemas:
-1. **Version bump**: Create a new version directory (e.g., `v1.1.0/`)
+1. **Version bump**: Create a new version directory (e.g., `v2.1.0/`)
 2. **Document changes**: Maintain changelog for breaking changes
 3. **Test compatibility**: Ensure backward compatibility or document migration path
-4. **Update documentation**: Keep this README and related docs updated
+4. **Update documentation**: Keep this README updated
 
-### Schema Context References
+### Schema Validation Rules
 
-The schemas reference external schema contexts defined in the Beckn Protocol specifications:
-```
-https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld
-```
+- All schemas use `additionalProperties: false` for strict validation
+- Domain pattern validation enforces supported domain formats
+- Required fields are explicitly marked in each schema
+- Enum values restrict actions to valid operations
+- Location codes follow ISO 3166-1 standards for countries and city codes
 
 ## Related Resources
 
-- **Beckn Protocol Specification**: [https://github.com/beckn/protocol-specifications](https://github.com/beckn/protocol-specifications)
-- **JSON Schema Specification**: [https://json-schema.org/](https://json-schema.org/)
 - **Postman Collections**: `/api-collection/postman-collection/`
 - **Swagger Documentation**: `/api-collection/swagger/`
-
-## Tools and Libraries
-
-### Recommended JSON Schema Validators
-
-- **ajv** (JavaScript/TypeScript): [https://github.com/ajv-validator/ajv](https://github.com/ajv-validator/ajv)
-- **jsonschema** (Python): [https://github.com/python-jsonschema/jsonschema](https://github.com/python-jsonschema/jsonschema)
-- **everit-org/json-schema** (Java): [https://github.com/everit-org/json-schema](https://github.com/everit-org/json-schema)
-- **gojsonschema** (Go): [https://github.com/xeipuuv/gojsonschema](https://github.com/xeipuuv/gojsonschema)
-
-### Schema Tools
-
-- **JSON Schema to TypeScript**: [https://github.com/bcherny/json-schema-to-typescript](https://github.com/bcherny/json-schema-to-typescript)
-- **JSON Editor**: [https://json-editor.github.io/json-editor/](https://json-editor.github.io/json-editor/)
-- **JSON Schema Lint**: [https://www.jsonschemavalidator.net/](https://www.jsonschemavalidator.net/)
+- **Beckn Protocol Specification**: [https://github.com/beckn/protocol-specifications](https://github.com/beckn/protocol-specifications)
 
 ## Notes
 
@@ -305,12 +254,4 @@ https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/m
 - Required fields are explicitly marked in each schema
 - Enum values restrict actions to valid operations
 - Location codes follow ISO 3166-1 standards for countries and city codes
-
-## Support
-
-For questions or issues related to these schemas:
-1. Refer to the Beckn Protocol documentation
-2. Check the main project README
-3. Review the Postman collections for example payloads
-4. Contact the development team for schema-specific queries
-
+- Domain identifier must match the pattern: `^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)`

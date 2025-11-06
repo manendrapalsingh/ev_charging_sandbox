@@ -45,7 +45,7 @@ modules:
         keyManager:
           id: simplekeymanager
           config:
-            networkParticipant: example-bap.com
+            networkParticipant: ev-charging.sandbox1.com
             keyId: bap-key-1
             signingPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
             signingPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
@@ -100,7 +100,7 @@ modules:
         keyManager:
           id: simplekeymanager
           config:
-            networkParticipant: example-bap.com
+            networkParticipant: ev-charging.sandbox1.com
             keyId: bap-key-1
             signingPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
             signingPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
@@ -110,6 +110,10 @@ modules:
           id: cache
           config:
             addr: redis-onix-bap:6379
+        schemaValidator:
+          id: schemavalidator
+          config:
+            schemaDir: /app/schemas
         router:
           id: router
           config:
@@ -122,6 +126,7 @@ modules:
               uuidKeys: transaction_id,message_id
               role: bap
       steps:
+        - validateSchema
         - addRoute
         - sign
 

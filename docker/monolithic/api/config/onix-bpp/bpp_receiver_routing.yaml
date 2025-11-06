@@ -7,8 +7,8 @@
 
 routingRules:
   # Phase 1: Discover request from CDS (routed to backend service)
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: url
     target:
       url: http://mock-bpp:9002
@@ -19,8 +19,8 @@ routingRules:
   # Phase 2+: Other requests from BAP-ONIX Caller (targetType: bpp routing)
   # These endpoints match bapTxnCaller-routing.yaml Phase 2+ configuration
   # Requests come directly from BAP-ONIX (bypasses CDS)
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: url
     target:
       url: http://mock-bpp:9002

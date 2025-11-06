@@ -4,7 +4,7 @@
 	"values": [
 		{
 			"key": "domain",
-			"value": "beckn.one:deg:ev-charging:2.0.0",
+			"value": "beckn.one:deg:ev-charging",
 			"type": "default",
 			"enabled": true
 		},
@@ -22,7 +22,7 @@
 		},
 		{
 			"key": "bap_uri",
-			"value": "http://localhost:8001/bap/receiver",
+			"value": "http://onix-bap-plugin:8001/bap/receiver",
 			"type": "default",
 			"enabled": true
 		},
@@ -34,7 +34,7 @@
 		},
 		{
 			"key": "bpp_uri",
-			"value": "http://localhost:8002/bpp/receiver",
+			"value": "http://onix-bpp-plugin:8002/bpp/receiver",
 			"type": "default",
 			"enabled": true
 		},
@@ -47,6 +47,126 @@
 		{
 			"key": "bpp_adapter_url",
 			"value": "http://localhost:8002/bpp/caller",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "bpp_receiver_url",
+			"value": "http://localhost:8002/bpp/receiver",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "discover_url",
+			"value": "http://localhost:8002/bpp/receiver/discover",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "select_url",
+			"value": "http://localhost:8002/bpp/receiver/select",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "init_url",
+			"value": "http://localhost:8002/bpp/receiver/init",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "confirm_url",
+			"value": "http://localhost:8002/bpp/receiver/confirm",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "update_url",
+			"value": "http://localhost:8002/bpp/receiver/update",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "track_url",
+			"value": "http://localhost:8002/bpp/receiver/track",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "cancel_url",
+			"value": "http://localhost:8002/bpp/receiver/cancel",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "rating_url",
+			"value": "http://localhost:8002/bpp/receiver/rating",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "support_url",
+			"value": "http://localhost:8002/bpp/receiver/support",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_discover_url",
+			"value": "http://localhost:8002/bpp/caller/on_discover",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_select_url",
+			"value": "http://localhost:8002/bpp/caller/on_select",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_init_url",
+			"value": "http://localhost:8002/bpp/caller/on_init",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_confirm_url",
+			"value": "http://localhost:8002/bpp/caller/on_confirm",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_update_url",
+			"value": "http://localhost:8002/bpp/caller/on_update",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_track_url",
+			"value": "http://localhost:8002/bpp/caller/on_track",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_cancel_url",
+			"value": "http://localhost:8002/bpp/caller/on_cancel",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_rating_url",
+			"value": "http://localhost:8002/bpp/caller/on_rating",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_support_url",
+			"value": "http://localhost:8002/bpp/caller/on_support",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "on_status_url",
+			"value": "http://localhost:8002/bpp/caller/on_status",
 			"type": "default",
 			"enabled": true
 		},

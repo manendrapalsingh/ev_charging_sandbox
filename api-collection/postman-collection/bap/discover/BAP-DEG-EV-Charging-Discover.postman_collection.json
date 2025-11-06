@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"LineString\",\n          \"coordinates\": [\n            [\n              77.5946,\n              12.9716\n            ],\n            [\n              76.6394,\n              12.2958\n            ]\n          ]\n        },\n        \"distanceMeters\": 5000\n      }\n    ]\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"LineString\",\n          \"coordinates\": [\n            [\n              77.5946,\n              12.9716\n            ],\n            [\n              76.6394,\n              12.2958\n            ]\n          ]\n        },\n        \"distanceMeters\": 5000\n      }\n    ]\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -21,13 +21,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -39,7 +37,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:itemAttributes.evseId == 'IN*PG*IND*01*TYPE2*A')]\"\n    }\n }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:itemAttributes.evseId == 'IN*PG*IND*01*TYPE2*A')]\"\n    }\n }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -47,13 +45,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -65,7 +61,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:provider.beckn:id == 'ecopower-charging')]\"\n    }\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:provider.beckn:id == 'ecopower-charging')]\"\n    }\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -73,13 +69,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -91,7 +85,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:id=='ITEM-BTM-DC60')]\"\n    }\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:id=='ITEM-BTM-DC60')]\"\n    }\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -99,13 +93,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -117,7 +109,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"Point\",\n          \"coordinates\": [\n            77.5900,\n            12.9400\n          ]\n        },\n        \"distanceMeters\": 10000\n      }\n    ]\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"Point\",\n          \"coordinates\": [\n            77.5900,\n            12.9400\n          ]\n        },\n        \"distanceMeters\": 10000\n      }\n    ]\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -125,13 +117,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -143,7 +133,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"Point\",\n          \"coordinates\": [77.59, 12.94]\n        }\n      }\n    ],\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:itemAttributes.connectorType == 'CCS2' && @.beckn:availabilityWindow.schema:startTime <= '12:30:00' && @.beckn:availabilityWindow.schema:endTime >= '14:30:00')]\"\n    }\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n  \"message\": {\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"Point\",\n          \"coordinates\": [77.59, 12.94]\n        }\n      }\n    ],\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:itemAttributes.connectorType == 'CCS2' && @.beckn:availabilityWindow.schema:startTime <= '12:30:00' && @.beckn:availabilityWindow.schema:endTime >= '14:30:00')]\"\n    }\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -151,13 +141,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -169,7 +157,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:itemAttributes.connectorType == 'CCS2' && @.beckn:itemAttributes.maxPowerKW >= 50)]\"\n    },\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": { \"type\": \"Point\", \"coordinates\": [77.59, 12.94] },\n        \"distanceMeters\": 10000\n      }\n    ]\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:itemAttributes.connectorType == 'CCS2' && @.beckn:itemAttributes.maxPowerKW >= 50)]\"\n    },\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": { \"type\": \"Point\", \"coordinates\": [77.59, 12.94] },\n        \"distanceMeters\": 10000\n      }\n    ]\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -177,13 +165,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -195,7 +181,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{$timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:fulfillment.beckn:deliveryAttributes.vehicle.make == 'Tata' && @.beckn:fulfillment.beckn:deliveryAttributes.vehicle.model == 'Nexon-EV' )]\"\n    },\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"Point\",\n          \"coordinates\": [\n            77.6000,\n            12.9500\n          ]\n        },\n        \"distanceMeters\": 8000\n      }\n    ]\n  }\n}",
+					"raw": "{\n  \"context\": {\n    \"version\": \"{{version}}\",\n    \"action\": \"discover\",\n    \"domain\": \"{{domain}}\",\n    \"location\": {\n      \"country\": {\n        \"code\": \"IND\"\n      },\n      \"city\": {\n        \"code\": \"std:080\"\n      }\n    },\n    \"bap_id\": \"{{bap_id}}\",\n    \"bap_uri\": \"{{bap_uri}}\",\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"message_id\": \"{{$guid}}\",\n    \"timestamp\": \"{{timestamp}}\",\n    \"ttl\": \"PT30S\",\n    \"schema_context\": [\n      \"https://raw.githubusercontent.com/beckn/protocol-specifications-new/refs/heads/main/schemas/charging_service/v1/context.jsonld\"\n    ]\n  },\n\"message\": {\n    \"filters\": {\n      \"type\": \"jsonpath\",\n      \"expression\": \"$[?(@.beckn:fulfillment.beckn:deliveryAttributes.vehicle.make == 'Tata' && @.beckn:fulfillment.beckn:deliveryAttributes.vehicle.model == 'Nexon-EV' )]\"\n    },\n    \"spatial\": [\n      {\n        \"op\": \"s_dwithin\",\n        \"targets\": \"$['beckn:availableAt'][*]['geo']\",\n        \"geometry\": {\n          \"type\": \"Point\",\n          \"coordinates\": [\n            77.6000,\n            12.9500\n          ]\n        },\n        \"distanceMeters\": 8000\n      }\n    ]\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -203,13 +189,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{bap_adapter_url}}/discover",
+					"raw": "{{discover_url}}",
 					"host": [
-						"{{bap_adapter_url}}"
+						"{{discover_url}}"
 					],
-					"path": [
-						"discover"
-					]
+					"path": []
 				}
 			},
 			"response": []
@@ -220,7 +204,20 @@
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
-				"exec": [""]
+				"exec": [
+					"// Generate a new transaction_id for discover request",
+					"// This transaction_id will be used for all subsequent requests in the same transaction flow",
+					"function generateUUID() {",
+					"    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {",
+					"        const r = Math.random() * 16 | 0;",
+					"        const v = c === 'x' ? r : (r & 0x3 | 0x8);",
+					"        return v.toString(16);",
+					"    });",
+					"}",
+					"const transactionId = generateUUID();",
+					"pm.environment.set('transaction_id', transactionId);",
+					"console.log('Generated new transaction_id: ' + transactionId);"
+				]
 			}
 		},
 		{
@@ -229,44 +226,6 @@
 				"type": "text/javascript",
 				"exec": [""]
 			}
-		}
-	],
-	"variable": [
-		{
-			"key": "domain",
-			"value": "beckn.one:deg:ev-charging:2.0.0"
-		},
-		{
-			"key": "version",
-			"value": "2.0.0"
-		},
-		{
-			"key": "bap_id",
-			"value": "ev-charging.sandbox1.com"
-		},
-		{
-			"key": "bap_uri",
-			"value": "http://onix-bap:8081/bap/receiver"
-		},
-		{
-			"key": "bpp_id",
-			"value": "ev-charging.sandbox2.com"
-		},
-		{
-			"key": "bpp_uri",
-			"value": "http://onix-bpp:8082/bpp/receiver"
-		},
-		{
-			"key": "bap_adapter_url",
-			"value": "http://localhost:8081/bap/caller"
-		},
-		{
-			"key": "transaction_id",
-			"value": "2b4d69aa-22e4-4c78-9f56-5a7b9e2b2002"
-		},
-		{
-			"key": "bpp_adapter_url",
-			"value": "http://localhost:8082/bpp/caller"
 		}
 	]
 }

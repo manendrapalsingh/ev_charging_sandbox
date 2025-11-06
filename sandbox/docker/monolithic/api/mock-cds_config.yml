@@ -12,8 +12,7 @@ cds:
     public_key: "CN+5/VZC6wWwEEH9Wa5JeWsjAD4VI8OCEZ53+TcDBTM="
     subscriber_id: "mock-cds"
     key_id: "cds-key-1"
-  # Enable signature verification for incoming requests
-  verify_signatures: true
+
 
 endpoints:
   bpps:
@@ -21,15 +20,11 @@ endpoints:
       port: "8002"
       discover_path: "/bpp/receiver/discover"
       subscriber_id: "onix-bpp"
-    - host: "mock-bpp"
-      port: "9002"
-      discover_path: "/bpp/receiver/discover"
-      subscriber_id: "mock-bpp"
     # Add more BPPs here as needed
-    # - host: "another-bpp"
+    # - host: "another-onix-bpp-plugin"
     #   port: "8002"
     #   discover_path: "/bpp/receiver/discover"
-    #   subscriber_id: "another-bpp.com"
+    #   subscriber_id: "another-onix-bpp-plugin.com"
 
 timing:
   broadcast_discover_delay_ms: 500
@@ -37,7 +32,8 @@ timing:
   signature_expiry_minutes: 5
 
 defaults:
-  version: "1.0.0"
+  version: "2.0.0"
+  domain: "beckn.one:deg:ev-charging"
   country_code: "IND"
   city_code: "std:080"
   default_gps: "12.9352,77.6245"

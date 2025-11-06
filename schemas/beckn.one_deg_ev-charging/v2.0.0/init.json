@@ -1,20 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "select",
+  "$id": "init",
   "type": "object",
   "properties": {
     "context": {
       "type": "object",
       "properties": {
-        "domain": {
+        "version": {
           "type": "string",
-          "description": "Identifier of the domain",
-          "pattern": "^(dent:ev-charging:|ev_charging_network)"
+          "description": "Version of the Beckn protocol"
         },
         "action": {
           "type": "string",
-          "enum": ["select"],
+          "enum": ["init"],
           "description": "API endpoint to be called"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -24,7 +28,7 @@
               "properties": {
                 "code": {
                   "type": "string",
-                  "description": "Country code"
+                  "description": "Country code as per ISO 3166-1 alpha-3 standard"
                 }
               },
               "required": ["code"]
@@ -41,10 +45,6 @@
             }
           },
           "required": ["country", "city"]
-        },
-        "version": {
-          "type": "string",
-          "description": "Version of the Beckn protocol"
         },
         "bap_id": {
           "type": "string",
@@ -66,12 +66,10 @@
         },
         "transaction_id": {
           "type": "string",
-          "format": "uuid",
           "description": "Transaction identifier"
         },
         "message_id": {
           "type": "string",
-          "format": "uuid",
           "description": "Message identifier"
         },
         "timestamp": {
@@ -92,7 +90,7 @@
           "description": "Schema context URLs"
         }
       },
-      "required": ["domain", "action", "location", "version", "bap_id", "bap_uri", "bpp_id", "bpp_uri", "transaction_id", "message_id", "timestamp"]
+      "required": ["version", "action", "domain", "location", "bap_id", "bap_uri", "bpp_id", "bpp_uri", "transaction_id", "message_id", "timestamp"]
     },
     "message": {
       "type": "object",
@@ -118,53 +116,62 @@
               "type": "string",
               "description": "Order status"
             },
+            "beckn:orderNumber": {
+              "type": "string",
+              "description": "Order number"
+            },
             "beckn:seller": {
               "type": "string",
               "description": "Seller identifier"
             },
             "beckn:buyer": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Buyer identifier"
-                },
-                {
-                  "type": "object",
-                  "description": "Buyer party object"
-                }
-              ]
-            },
-            "beckn:orderValue": {
               "type": "object",
               "properties": {
-                "currency": {
+                "@context": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "@type": {
+                  "type": "string",
+                  "enum": ["beckn:Party"]
+                },
+                "beckn:id": {
                   "type": "string"
                 },
-                "value": {
-                  "type": "number"
+                "beckn:role": {
+                  "type": "string",
+                  "enum": ["BUYER"]
                 },
-                "components": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string"
-                      },
-                      "value": {
-                        "type": "number"
-                      },
-                      "currency": {
-                        "type": "string"
-                      },
-                      "description": {
-                        "type": "string"
+                "beckn:name": {
+                  "type": "string"
+                },
+                "beckn:organization": {
+                  "type": "object",
+                  "properties": {
+                    "descriptor": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
+                },
+                "beckn:address": {
+                  "type": "string"
+                },
+                "beckn:email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "beckn:phone": {
+                  "type": "string"
+                },
+                "beckn:taxId": {
+                  "type": "string"
                 }
-              },
-              "required": ["currency", "value"]
+              }
             },
             "beckn:orderItems": {
               "type": "array",
@@ -197,18 +204,12 @@
                       "beckn:descriptor": {
                         "type": "object",
                         "properties": {
-                          "@type": {
+                          "name": {
                             "type": "string"
                           },
-                          "schema:name": {
+                          "short_desc": {
                             "type": "string"
                           }
-                        }
-                      },
-                      "beckn:items": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
                         }
                       },
                       "beckn:price": {
@@ -253,12 +254,6 @@
                           }
                         }
                       },
-                      "beckn:acceptedPaymentMethod": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
                       "beckn:offerAttributes": {
                         "type": "object"
                       }
@@ -283,6 +278,40 @@
               },
               "minItems": 1
             },
+            "beckn:orderValue": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "components": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["UNIT", "FEE", "SURCHARGE", "DISCOUNT", "TAX"]
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["type", "value", "currency"]
+                  }
+                }
+              },
+              "required": ["currency", "value"]
+            },
             "beckn:fulfillment": {
               "type": "object",
               "properties": {
@@ -297,71 +326,19 @@
                 "beckn:id": {
                   "type": "string"
                 },
-                "beckn:mode": {
+                "beckn:status": {
                   "type": "string"
                 },
                 "beckn:deliveryAttributes": {
                   "type": "object"
-                },
-                "beckn:status": {
-                  "type": "string"
                 }
               }
             },
             "beckn:orderAttributes": {
               "type": "object"
-            },
-            "beckn:payment": {
-              "type": "object",
-              "properties": {
-                "@context": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "@type": {
-                  "type": "string",
-                  "enum": ["beckn:Payment"]
-                },
-                "beckn:id": {
-                  "type": "string"
-                },
-                "beckn:status": {
-                  "type": "string"
-                },
-                "beckn:amount": {
-                  "type": "object",
-                  "properties": {
-                    "currency": {
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "number"
-                    }
-                  }
-                },
-                "beckn:paymentURL": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "beckn:txnRef": {
-                  "type": "string"
-                },
-                "beckn:acceptedPaymentMethods": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "beckn:beneficiary": {
-                  "type": "string"
-                },
-                "beckn:paidAt": {
-                  "type": "string",
-                  "format": "date-time"
-                }
-              }
             }
-          }
+          },
+          "required": ["@type", "beckn:orderItems", "beckn:fulfillment"]
         }
       },
       "required": ["order"]

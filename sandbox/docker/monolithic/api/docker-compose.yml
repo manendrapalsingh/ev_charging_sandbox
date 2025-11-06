@@ -1,9 +1,10 @@
-version: '3.8'
+version: '3.9'
 
 services:
   # Redis for onix-bap-plugin
   redis-onix-bap:
     image: redis:alpine
+    pull_policy: always
     container_name: redis-onix-bap
     ports:
       - "6379:6379"
@@ -19,6 +20,7 @@ services:
   # Redis for onix-bpp-plugin
   redis-onix-bpp:
     image: redis:alpine
+    pull_policy: always
     container_name: redis-onix-bpp
     ports:
       - "6380:6379"
@@ -34,6 +36,7 @@ services:
   # Onix BAP Plugin
   onix-bap-plugin:
     image: manendrapalsingh/onix-bap-plugin:latest
+    pull_policy: always
     container_name: onix-bap-plugin
     ports:
       - "8001:8001"
@@ -58,6 +61,7 @@ services:
   # Onix BPP Plugin
   onix-bpp-plugin:
     image: manendrapalsingh/onix-bpp-plugin:latest
+    pull_policy: always
     container_name: onix-bpp-plugin
     ports:
       - "8002:8002"
@@ -82,15 +86,13 @@ services:
   # Mock CDS Service
   mock-cds:
     image: manendrapalsingh/mock-cds:latest
+    pull_policy: always
     container_name: mock-cds
     ports:
       - "8082:8082"
     volumes:
       # Mount config file from local directory
       - ./mock-cds_config.yml:/app/config/config.yaml:ro
-    environment:
-      # Optional: Override config file path if needed
-      # CONFIG_FILE: /app/config/config.yaml
     networks:
       - onix-network
     restart: unless-stopped
@@ -107,15 +109,13 @@ services:
   # Mock Registry Service
   mock-registry:
     image: manendrapalsingh/mock-registry:latest
+    pull_policy: always
     container_name: mock-registry
     ports:
       - "3030:3030"
     volumes:
       # Mount config file from local directory
       - ./mock-registry_config.yml:/app/config/config.yaml:ro
-    environment:
-      # Optional: Override config path if mounted at different location
-      # - CONFIG_PATH=/app/config/config.yaml
     networks:
       - onix-network
     restart: unless-stopped
@@ -128,15 +128,13 @@ services:
   # Mock BAP Service
   mock-bap:
     image: manendrapalsingh/mock-bap:latest
+    pull_policy: always
     container_name: mock-bap
     ports:
       - "9001:9001"
     volumes:
       # Mount config file from local directory
       - ./mock-bap_config.yml:/app/config/config.yaml:ro
-    environment:
-      # Optional: Override config file path if needed
-      # CONFIG_FILE: /app/config/config.yaml
     networks:
       - onix-network
     restart: unless-stopped
@@ -150,15 +148,13 @@ services:
   # Mock BPP Service
   mock-bpp:
     image: manendrapalsingh/mock-bpp:latest
+    pull_policy: always
     container_name: mock-bpp
     ports:
       - "9002:9002"
     volumes:
       # Mount config file from local directory
       - ./mock-bpp_config.yml:/app/config/config.yaml:ro
-    environment:
-      # Optional: Override config file path if needed
-      # CONFIG_FILE: /app/config/config.yaml
     networks:
       - onix-network
     restart: unless-stopped

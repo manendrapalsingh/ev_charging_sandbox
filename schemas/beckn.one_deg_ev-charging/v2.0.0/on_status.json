@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "update",
+  "$id": "on_status",
   "type": "object",
   "properties": {
     "context": {
@@ -12,12 +12,13 @@
         },
         "action": {
           "type": "string",
-          "enum": ["update"],
-          "description": "API endpoint to be called"
+          "enum": ["on_status"],
+          "description": "API endpoint callback"
         },
         "domain": {
           "type": "string",
-          "description": "Identifier of the domain"
+          "description": "Identifier of the domain",
+          "pattern": "^(dent:ev-charging:|ev_charging_network|beckn.one:deg:ev-charging)"
         },
         "location": {
           "type": "object",
@@ -74,7 +75,7 @@
         "timestamp": {
           "type": "string",
           "format": "date-time",
-          "description": "Time at which the request was generated"
+          "description": "Time at which the response was generated"
         },
         "ttl": {
           "type": "string",
@@ -119,37 +120,6 @@
               "type": "string",
               "description": "Order number"
             },
-            "beckn:seller": {
-              "type": "string",
-              "description": "Seller identifier"
-            },
-            "beckn:buyer": {
-              "type": "object"
-            },
-            "beckn:orderItems": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            },
-            "beckn:orderValue": {
-              "type": "object",
-              "properties": {
-                "currency": {
-                  "type": "string"
-                },
-                "value": {
-                  "type": "number"
-                },
-                "components": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              },
-              "required": ["currency", "value"]
-            },
             "beckn:fulfillment": {
               "type": "object",
               "properties": {
@@ -165,10 +135,15 @@
                   "type": "string"
                 },
                 "beckn:status": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Fulfillment status (e.g., INTERRUPTED, COMPLETED)"
                 },
                 "beckn:deliveryAttributes": {
-                  "type": "object"
+                  "type": "object",
+                  "description": "Charging session attributes with status updates"
+                },
+                "beckn:tracking": {
+                  "type": "boolean"
                 }
               }
             },
@@ -187,7 +162,8 @@
                   "type": "string"
                 },
                 "beckn:status": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Payment status"
                 },
                 "beckn:amount": {
                   "type": "object",
@@ -200,37 +176,31 @@
                     }
                   },
                   "required": ["currency", "value"]
-                },
-                "beckn:paymentURL": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "beckn:txnRef": {
-                  "type": "string"
-                },
-                "beckn:paidAt": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "beckn:acceptedPaymentMethods": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "beckn:beneficiary": {
-                  "type": "string"
                 }
               }
-            },
-            "beckn:orderAttributes": {
-              "type": "object"
             }
           },
           "required": ["@type", "beckn:id"]
         }
       },
       "required": ["order"]
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": ["context", "message"],

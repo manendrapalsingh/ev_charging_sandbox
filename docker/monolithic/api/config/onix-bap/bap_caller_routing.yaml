@@ -7,8 +7,8 @@
 
 routingRules:
   # Phase 1: Discover to CDS
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: url
     target:
       url: http://mock-cds:8082/csd
@@ -17,8 +17,8 @@ routingRules:
       - discover
 
   # Phase 2+: Other actions to BPP (via context_endpoint)
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: bpp
     target: {}
     endpoints:
