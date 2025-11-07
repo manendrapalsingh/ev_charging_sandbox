@@ -1,0 +1,93 @@
+# ONIX BAP Receiver Routing Configuration
+
+# Supports Phase 1 (Discover Aggregation) and Phase 2+ (Direct BPP Callbacks)
+
+# Phase 1: Discover Aggregation
+
+# Phase 2+: Other Callbacks (Direct from BPPs to BAP, NO CDS involvement)
+
+# Routes to BAP app via RabbitMQ
+
+routingRules:
+
+  # Phase 1: on_discover callback to BAP app via RabbitMQ
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_discover
+    endpoints:
+      - on_discover
+
+  # Phase 2+: Other callbacks to BAP app via RabbitMQ
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_select
+    endpoints:
+      - on_select
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_init
+    endpoints:
+      - on_init
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_confirm
+    endpoints:
+      - on_confirm
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_status
+    endpoints:
+      - on_status
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_track
+    endpoints:
+      - on_track
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_cancel
+    endpoints:
+      - on_cancel
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_update
+    endpoints:
+      - on_update
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_rating
+    endpoints:
+      - on_rating
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bap.on_support
+    endpoints:
+      - on_support

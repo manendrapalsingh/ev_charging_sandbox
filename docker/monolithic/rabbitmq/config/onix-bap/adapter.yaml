@@ -1,0 +1,167 @@
+appName: "onix-ev-charging"
+log:
+  level: debug
+  destinations:
+    - type: stdout
+  contextKeys:
+    - transaction_id
+    - message_id
+    - subscriber_id
+    - module_id
+
+# BAP Adapter with RabbitMQ Integration
+# - bapTxnCaller: Consumes requests from BAP Backend via RabbitMQ and routes to BPP via HTTP
+# - bapTxnReceiver: Receives callbacks from BPP via HTTP and publishes to BAP Backend via RabbitMQ
+
+pluginManager:
+  root: /app/plugins
+
+modules:
+  # BAP Receiver - HTTP handler that receives callbacks from BPP and publishes to BAP Backend via RabbitMQ
+  # HTTP Endpoint: /bap/receiver/ (receives HTTP requests from BPP adapter)
+  # Phase 1: Receives aggregated search results from CDS (on_discover) via HTTP
+  # Phase 2+: Receives callbacks directly from BPPs (on_select, on_init, on_confirm, etc.) via HTTP
+  # Publishes callbacks to RabbitMQ with routing keys bap.on_* for BAP Backend to consume
+  - name: bapTxnReceiver
+    path: /bap/receiver/
+    handler:
+      type: std
+      role: bap
+      httpClientConfig:
+        maxIdleConns: 1000
+        maxIdleConnsPerHost: 200
+        idleConnTimeout: 300s
+        responseHeaderTimeout: 5s
+      plugins:
+        registry:
+          id: registry
+          config:
+            url: http://mock-registry:3030
+            retry_max: 3
+            retry_wait_min: 100ms
+            retry_wait_max: 500ms
+        keyManager:
+          id: simplekeymanager
+          config:
+            networkParticipant: example-bap.com
+            keyId: bap-key-1
+            signingPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
+            signingPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
+            encrPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
+            encrPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
+        cache:
+          id: cache
+          config:
+            addr: redis-bap:6379
+        schemaValidator:
+          id: schemavalidator
+          config:
+            schemaDir: /app/schemas
+        signValidator:
+          id: signvalidator
+        router:
+          id: router
+          config:
+            routingConfig: /app/config/message-baised/rabbit-mq/onix-bap/bapTxnReciever-routing.yaml
+        publisher:
+          id: publisher
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            durable: "true"
+        middleware:
+          - id: reqpreprocessor
+            config:
+              uuidKeys: transaction_id,message_id
+              role: bap
+      steps:
+        - validateSign
+        - validateSchema
+        - addRoute
+
+  # BAP Caller - Queue consumer that consumes requests from BAP Backend via RabbitMQ
+  # Consumes from bap_caller_queue bound to routing keys bap.* (requests from BAP Backend)
+  # Phase 1: Routes discover requests to CDS for aggregation
+  # Phase 2+: Routes other requests directly to BPP via HTTP (bypasses CDS)
+  # Uses bpp_uri from context for dynamic routing in Phase 2+
+  - name: bapTxnCaller
+    path: /bap/caller/
+    handler:
+      type: std
+      role: bap
+      httpClientConfig:
+        maxIdleConns: 1000
+        maxIdleConnsPerHost: 200
+        idleConnTimeout: 300s
+        responseHeaderTimeout: 5s
+      plugins:
+        registry:
+          id: registry
+          config:
+            url: http://mock-registry:3030
+            retry_max: 3
+            retry_wait_min: 100ms
+            retry_wait_max: 500ms
+        keyManager:
+          id: simplekeymanager
+          config:
+            networkParticipant: example-bap.com
+            keyId: bap-key-1
+            signingPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
+            signingPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
+            encrPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
+            encrPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
+        cache:
+          id: cache
+          config:
+            addr: redis-bap:6379
+        schemaValidator:
+          id: schemavalidator
+          config:
+            schemaDir: /app/schemas
+        consumer:
+          id: consumer
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            queue: bap_caller_queue
+            routingKeys:
+              - bap.discover
+              - bap.select
+              - bap.init
+              - bap.confirm
+              - bap.status
+              - bap.track
+              - bap.cancel
+              - bap.update
+              - bap.rating
+              - bap.support
+            durable: "true"
+            autoDelete: "false"
+            exclusive: "false"
+            noWait: "false"
+            queueArgs: ""
+            autoAck: "false"
+            prefetchCount: 10
+            consumerThreads: 2
+        router:
+          id: router
+          config:
+            routingConfig: /app/config/message-baised/rabbit-mq/onix-bap/bapTxnCaller-routing.yaml
+        publisher:
+          id: publisher
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            durable: "true"
+        signer:
+          id: signer
+        middleware:
+          - id: reqpreprocessor
+            config:
+              uuidKeys: transaction_id,message_id
+              role: bap
+      steps:
+        - validateSchema
+        - addRoute
+        - sign

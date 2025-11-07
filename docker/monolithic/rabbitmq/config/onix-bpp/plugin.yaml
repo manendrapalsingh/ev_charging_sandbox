@@ -1,0 +1,11 @@
+plugins:
+  - registry
+  - simplekeymanager
+  - cache
+  - schemavalidator
+  - signvalidator
+  - consumer
+  - router
+  - publisher
+  - signer
+  - reqpreprocessor

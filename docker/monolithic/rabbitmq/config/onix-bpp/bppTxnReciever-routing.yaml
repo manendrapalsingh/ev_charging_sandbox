@@ -1,0 +1,97 @@
+# ONIX BPP Receiver Routing Configuration
+
+# Supports Phase 1 (Discover from CDS) and Phase 2+ (Direct from BAP-ONIX)
+
+
+
+# Phase 1: Discover requests from CDS (after aggregation)
+
+# Phase 2+: Other requests directly from BAP-ONIX (NO CDS involvement)
+
+# All routes to backend service
+
+
+
+routingRules:
+
+  # Phase 1: Discover request from CDS to BPP app via RabbitMQ
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.discover
+    endpoints:
+      - discover
+
+  # Phase 2+: Other requests from BAP-ONIX to BPP app via RabbitMQ
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.select
+    endpoints:
+      - select
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.init
+    endpoints:
+      - init
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.confirm
+    endpoints:
+      - confirm
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.status
+    endpoints:
+      - status
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.track
+    endpoints:
+      - track
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.cancel
+    endpoints:
+      - cancel
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.update
+    endpoints:
+      - update
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.rating
+    endpoints:
+      - rating
+
+  - domain: ev_charging_network
+    version: "1.0.0"
+    targetType: publisher
+    target:
+      publisherId: bpp.support
+    endpoints:
+      - support

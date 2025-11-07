@@ -1,0 +1,170 @@
+appName: "bpp-ev-charging"
+log:
+  level: debug
+  destinations:
+    - type: stdout
+  contextKeys:
+    - transaction_id
+    - message_id
+    - subscriber_id
+    - module_id
+
+http:
+  port: 8002
+  timeout:
+    read: 30
+    write: 30
+    idle: 30
+
+# Note: HTTP port exposed for bppTxnReceiver endpoint (/bpp/receiver/)
+# bppTxnReceiver: HTTP handler that receives requests from BAP adapter and publishes to RabbitMQ
+# bppTxnCaller: Queue consumer that consumes callbacks from BPP Backend and routes via HTTP
+
+pluginManager:
+  root: /app/plugins
+
+modules:
+  # BPP Receiver - HTTP handler that receives requests from BAP adapter and publishes to BPP Backend via RabbitMQ
+  # Phase 1: Receives discover requests from BAP adapter, publishes to BPP Backend
+  # Phase 2+: Receives requests directly from BAP adapter (select, init, confirm, etc.), publishes to BPP Backend
+  - name: bppTxnReceiver
+    path: /bpp/receiver/
+    handler:
+      type: std
+      role: bpp
+      httpClientConfig:
+        maxIdleConns: 1000
+        maxIdleConnsPerHost: 200
+        idleConnTimeout: 300s
+        responseHeaderTimeout: 5s
+      plugins:
+        registry:
+          id: registry
+          config:
+            url: http://mock-registry:3030
+            retry_max: 3
+            retry_wait_min: 100ms
+            retry_wait_max: 500ms
+        keyManager:
+          id: simplekeymanager
+          config:
+            networkParticipant: example-bpp.com
+            keyId: bpp-key-1
+            signingPrivateKey: HH3KyEg4KhS8jVxPtEHMr6FTqyL0ef100vSPoZ2U0x4=
+            signingPublicKey: 2ja8jS4O/HhyfnTzgC81mXkNNAueeqGEhv42FJtoUv8=
+            encrPrivateKey: HH3KyEg4KhS8jVxPtEHMr6FTqyL0ef100vSPoZ2U0x4=
+            encrPublicKey: 2ja8jS4O/HhyfnTzgC81mXkNNAueeqGEhv42FJtoUv8=
+        cache:
+          id: cache
+          config:
+            addr: redis-bpp:6379
+        schemaValidator:
+          id: schemavalidator
+          config:
+            schemaDir: /app/schemas
+        signValidator:
+          id: signvalidator
+        router:
+          id: router
+          config:
+            routingConfig: /app/config/message-baised/rabbit-mq/onix-bpp/bppTxnReciever-routing.yaml
+        publisher:
+          id: publisher
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            durable: "true"
+        middleware:
+          - id: reqpreprocessor
+            config:
+              uuidKeys: transaction_id,message_id
+              role: bpp
+      steps:
+        - validateSign
+        - validateSchema
+        - addRoute
+
+  # BPP Caller - Queue consumer that consumes callbacks from BPP Backend and routes them to BAP/CDS via HTTP
+  # Phase 1: Consumes on_discover callbacks, routes to CDS for aggregation
+  # Phase 2+: Consumes callbacks (on_select, on_init, on_confirm, etc.), routes to BAP adapter
+  - name: bppTxnCaller
+    path: /bpp/caller/
+    handler:
+      type: std
+      role: bpp
+      httpClientConfig:
+        maxIdleConns: 1000
+        maxIdleConnsPerHost: 200
+        idleConnTimeout: 300s
+        responseHeaderTimeout: 5s
+      plugins:
+        registry:
+          id: registry
+          config:
+            url: http://mock-registry:3030
+            retry_max: 3
+            retry_wait_min: 100ms
+            retry_wait_max: 500ms
+        keyManager:
+          id: simplekeymanager
+          config:
+            networkParticipant: example-bpp.com
+            keyId: bpp-key-1
+            signingPrivateKey: HH3KyEg4KhS8jVxPtEHMr6FTqyL0ef100vSPoZ2U0x4=
+            signingPublicKey: 2ja8jS4O/HhyfnTzgC81mXkNNAueeqGEhv42FJtoUv8=
+            encrPrivateKey: HH3KyEg4KhS8jVxPtEHMr6FTqyL0ef100vSPoZ2U0x4=
+            encrPublicKey: 2ja8jS4O/HhyfnTzgC81mXkNNAueeqGEhv42FJtoUv8=
+        cache:
+          id: cache
+          config:
+            addr: redis-bpp:6379
+        schemaValidator:
+          id: schemavalidator
+          config:
+            schemaDir: /app/schemas
+        consumer:
+          id: consumer
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            queue: bpp_caller_queue
+            routingKeys:
+              - bpp.on_discover
+              - bpp.on_select
+              - bpp.on_init
+              - bpp.on_confirm
+              - bpp.on_status
+              - bpp.on_track
+              - bpp.on_cancel
+              - bpp.on_update
+              - bpp.on_rating
+              - bpp.on_support
+            durable: "true"
+            autoDelete: "false"
+            exclusive: "false"
+            noWait: "false"
+            queueArgs: ""
+            autoAck: "false"
+            prefetchCount: 10
+            consumerThreads: 2
+        router:
+          id: router
+          config:
+            routingConfig: /app/config/message-baised/rabbit-mq/onix-bpp/bppTxnCaller-routing.yaml
+        publisher:
+          id: publisher
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            durable: "true"
+        signer:
+          id: signer
+        middleware:
+          - id: reqpreprocessor
+            config:
+              uuidKeys: transaction_id,message_id
+              role: bpp
+      steps:
+        - validateSchema
+        - addRoute
+        - sign
