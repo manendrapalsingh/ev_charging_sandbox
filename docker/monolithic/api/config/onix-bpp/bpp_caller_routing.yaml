@@ -1,9 +1,10 @@
 # BPP Caller Routing Configuration
-# Phase 1: Sends on_discover response to CDS for aggregation
-# Phase 2+: Sends other responses directly to BAP-ONIX (bypasses CDS)
+# Phase 1: Consumes on_discover from RabbitMQ (mock-bpp-rabbitmq producer) -> sends HTTP to CDS
+# Phase 2+: Consumes other responses from RabbitMQ (mock-bpp-rabbitmq producer) -> sends HTTP to BAP-ONIX plugin -> publishes to RabbitMQ -> mock-bap-rabbitmq (consumer)
 
 routingRules:
-  # Phase 1: on_discover response to CDS
+  # Phase 1: on_discover response from RabbitMQ -> sends HTTP to CDS
+  # Consumes from RabbitMQ queue (bpp.on_discover routing key) and forwards to CDS
   - domain: beckn.one:deg:ev-charging
     version: "2.0.0"
     targetType: url
@@ -13,7 +14,8 @@ routingRules:
     endpoints:
       - on_discover
 
-  # Phase 2+: Other responses directly to BAP-ONIX (uses bap_uri from context)
+  # Phase 2+: Other responses from RabbitMQ -> sends HTTP to BAP-ONIX plugin -> publishes to RabbitMQ -> mock-bap-rabbitmq (consumer)
+  # Consumes from RabbitMQ queue (bpp.on_select, etc.) and forwards to BAP plugin using bap_uri from context
   - domain: beckn.one:deg:ev-charging
     version: "2.0.0"
     targetType: bap

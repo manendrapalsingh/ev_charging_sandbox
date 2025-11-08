@@ -295,6 +295,120 @@ docker-compose -f docker-compose-onix-bpp-plugin.yml down
 docker-compose -f docker-compose-onix-bap-plugin.yml -f docker-compose-onix-bpp-plugin.yml down
 ```
 
+## Example API Requests
+
+### BAP - Discover Request
+
+```bash
+# Send a discover request from BAP
+curl -X POST http://localhost:8001/bap/caller/discover \
+  -H "Content-Type: application/json" \
+  -d '{
+    "context": {
+      "domain": "ev_charging_network",
+      "version": "1.0.0",
+      "action": "discover",
+      "bap_id": "example-bap.com",
+      "bap_uri": "http://mock-bap-discover:9001",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+      "message_id": "550e8400-e29b-41d4-a716-446655440001",
+      "timestamp": "2023-06-15T09:30:00.000Z",
+      "ttl": "PT30S"
+    },
+    "message": {
+      "intent": {
+        "fulfillment": {
+          "start": {
+            "location": {
+              "gps": "12.9715987,77.5945627"
+            }
+          },
+          "end": {
+            "location": {
+              "gps": "12.9715987,77.5945627"
+            }
+          }
+        }
+      }
+    }
+  }'
+```
+
+### BAP - Select Request (Routes to mock-bpp-select)
+
+```bash
+# Send a select request - will route to mock-bpp-select service
+curl -X POST http://localhost:8001/bap/caller/select \
+  -H "Content-Type: application/json" \
+  -d '{
+    "context": {
+      "domain": "ev_charging_network",
+      "version": "1.0.0",
+      "action": "select",
+      "bap_id": "example-bap.com",
+      "bap_uri": "http://mock-bap-select:9001",
+      "bpp_id": "example-bpp.com",
+      "bpp_uri": "http://onix-bpp-plugin:8002",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+      "message_id": "550e8400-e29b-41d4-a716-446655440002",
+      "timestamp": "2023-06-15T09:30:00.000Z",
+      "ttl": "PT30S"
+    },
+    "message": {
+      "order": {
+        "items": [
+          {
+            "id": "charging-station-1"
+          }
+        ]
+      }
+    }
+  }'
+```
+
+**Note**: 
+- In microservice architecture, each endpoint routes to different mock services
+- The `bap_uri` should point to the specific mock BAP service for that callback (e.g., `mock-bap-select:9001` for on_select)
+- The request will be routed through onix-bpp-plugin to the appropriate mock BPP service (e.g., `mock-bpp-select:9002`)
+
+## Health Checks
+
+### Check Service Health
+
+```bash
+# Check if BAP adapter is running
+curl http://localhost:8001/health
+
+# Check if BPP adapter is running
+curl http://localhost:8002/health
+```
+
+### Verify Redis Connection
+
+```bash
+# Test BAP Redis connection
+docker exec redis-onix-bap redis-cli ping
+# Should return: PONG
+
+# Test BPP Redis connection
+docker exec redis-onix-bpp redis-cli ping
+# Should return: PONG
+```
+
+### Verify Mock Services
+
+```bash
+# Check all mock BAP services
+docker ps | grep mock-bap
+
+# Check all mock BPP services
+docker ps | grep mock-bpp
+
+# Test connectivity to a specific mock service
+docker exec onix-bap-plugin ping -c 3 mock-bap-select
+docker exec onix-bap-plugin ping -c 3 mock-bpp-select
+```
+
 ## Customization
 
 ### Changing Routing
