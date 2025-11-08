@@ -11,7 +11,7 @@
         "code": "std:080"
       }
     },
-    "bap_id": "example-bap.com",
+    "bap_id": "ev-charging.sandbox1.com",
     "bap_uri": "http://mock-bap-rabbit-mq:9003",
     "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
     "message_id": "550e8400-e29b-41d4-a716-446655440013",

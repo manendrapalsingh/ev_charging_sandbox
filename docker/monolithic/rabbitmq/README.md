@@ -1,34 +1,92 @@
-# Docker BPP RabbitMQ Plugin
+# Docker RabbitMQ Plugins for ONIX BAP and BPP
 
-This directory contains the Docker plugin for ONIX BPP (Buyer Provider Platform) adapter with RabbitMQ message queue integration.
+This directory contains Docker plugins for ONIX BAP (Buyer App Platform) and BPP (Buyer Provider Platform) adapters with RabbitMQ message queue integration.
 
 ## Overview
 
-The BPP RabbitMQ plugin is designed to handle BPP-side transactions using RabbitMQ for asynchronous message processing. The adapter **consumes messages from RabbitMQ queues**, processes them through validation steps, and sends ACK/NACK based on processing results.
+The RabbitMQ plugins are designed to handle BAP and BPP transactions using RabbitMQ for asynchronous message processing. Each adapter consists of two modules:
 
-### Architecture
+### BAP Adapter Modules
 
-- **Queue-Based Consumption**: The adapter consumes messages from `bpp_receiver_queue` bound to routing keys like `bpp.discover`, `bpp.select`, etc.
+1. **bapTxnCaller**: Queue consumer that consumes requests from BAP Backend and routes them to BPP via HTTP
+2. **bapTxnReceiver**: HTTP handler that receives callbacks from BPP and publishes them to BAP Backend via RabbitMQ
 
-- **Message Processing**: Messages are processed through configured steps (currently `validateSign`)
+### BPP Adapter Modules
+
+1. **bppTxnCaller**: Queue consumer that consumes callbacks from BPP Backend and routes them to BAP/CDS via HTTP
+2. **bppTxnReceiver**: HTTP handler that receives requests from BAP adapter and publishes them to BPP Backend via RabbitMQ
+
+## Architecture
+
+### BAP Adapter
+
+#### bapTxnCaller (Queue Consumer)
+
+- **Queue-Based Consumption**: Consumes messages from `bap_caller_queue` bound to routing keys like `bap.discover`, `bap.select`, etc. (requests from BAP Backend)
+
+- **Message Processing**: Messages are processed through configured steps (`validateSchema`, `addRoute`, `sign`)
+
+- **HTTP Routing**: Routes processed messages to BPP adapter via HTTP using `targetType: bpp`
 
 - **ACK/NACK Handling**: 
-
   - **ACK**: Sent when message processing succeeds
-
   - **NACK**: Sent with requeue when processing fails (allows retry)
 
 - **Manual Acknowledgment**: Uses `autoAck: false` for reliable message processing
 
+#### bapTxnReceiver (HTTP Handler)
+
+- **HTTP Server**: Requires HTTP server to be enabled (port 8001) for receiving HTTP requests
+
+- **HTTP Endpoint**: Receives HTTP requests at `/bap/receiver/` from BPP adapter
+
+- **Message Processing**: Processes through steps (`validateSign`, `validateSchema`, `addRoute`)
+
+- **Publishing**: Publishes processed messages to RabbitMQ with routing keys like `bap.on_discover`, `bap.on_select`, etc. (callbacks to BAP Backend)
+
+### BPP Adapter
+
+#### bppTxnCaller (Queue Consumer)
+
+- **Queue-Based Consumption**: Consumes messages from `bpp_caller_queue` bound to routing keys like `bpp.on_discover`, `bpp.on_select`, etc. (callbacks from BPP Backend)
+
+- **Message Processing**: Messages are processed through configured steps (`validateSchema`, `addRoute`, `sign`)
+
+- **HTTP Routing**: Routes processed messages to BAP adapter or CDS via HTTP using `targetType: bap` or `url`
+
+- **ACK/NACK Handling**: 
+  - **ACK**: Sent when message processing succeeds
+  - **NACK**: Sent with requeue when processing fails (allows retry)
+
+- **Manual Acknowledgment**: Uses `autoAck: false` for reliable message processing
+
+#### bppTxnReceiver (HTTP Handler)
+
+- **HTTP Server**: Requires HTTP server to be enabled (port 8002) for receiving HTTP requests
+
+- **HTTP Endpoint**: Receives HTTP requests at `/bpp/receiver/` from BAP adapter
+
+- **Message Processing**: Processes through steps (`validateSign`, `validateSchema`, `addRoute`)
+
+- **Publishing**: Publishes processed messages to RabbitMQ with routing keys like `bpp.discover`, `bpp.select`, etc. (requests to BPP Backend)
+
 ## Features
 
-- **Queue-Based Message Consumption**: Consumes messages from RabbitMQ queues
+- **Dual-Mode Operation**: 
+  - Queue consumer for requests/callbacks from Backend
+  - HTTP handler for callbacks/requests from adapter
+
+- **Queue-Based Message Consumption**: Consumes messages from Backend via RabbitMQ
+
+- **HTTP-Based Request/Callback Reception**: Receives requests/callbacks from adapter via HTTP
+
+- **Message Publishing**: Publishes messages to Backend via RabbitMQ
 
 - **Manual ACK/NACK**: Reliable message processing with retry capability
 
-- **Phase 1 Support**: Processes discover requests from CDS
+- **Phase 1 Support**: Routes discover requests to CDS for aggregation
 
-- **Phase 2+ Support**: Processes requests directly from BAP-ONIX
+- **Phase 2+ Support**: Routes requests directly to BPP and receives callbacks
 
 - **External Configuration**: Config files are mounted from the host
 
@@ -38,116 +96,27 @@ The BPP RabbitMQ plugin is designed to handle BPP-side transactions using Rabbit
 
 Pre-built images are available from Docker Hub:
 
+- `manendrapalsingh/onix-bap-plugin-rabbit-mq:latest`
+- `manendrapalsingh/onix-bap-plugin-rabbit-mq:sha-{commit-sha}`
 - `manendrapalsingh/onix-bpp-plugin-rabbit-mq:latest`
-
 - `manendrapalsingh/onix-bpp-plugin-rabbit-mq:sha-{commit-sha}`
-
-## Building the Image
-
-### Build from Source
-
-```bash
-# From repository root
-docker build -f docker_plugin/rabbit-mq/docker-bpp-rabbitmq-plugin/Dockerfile -t onix-bpp-plugin-rabbit-mq:latest .
-```
 
 ## Running with Docker Compose
 
-### Using Pre-built Image
+### BAP Plugin
 
-Create a `docker-compose.yml` file:
-
-```yaml
-version: '3.8'
-
-services:
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"   # AMQP port
-      - "15672:15672" # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
-      RABBITMQ_USERNAME: admin
-      RABBITMQ_PASSWORD: admin
-    networks:
-      - onix-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-bpp:
-    image: redis:alpine
-    container_name: redis-bpp
-    ports:
-      - "6380:6379"
-    networks:
-      - onix-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  onix-bpp-plugin-rabbitmq:
-    image: manendrapalsingh/onix-bpp-plugin-rabbit-mq:latest
-    container_name: onix-bpp-plugin-rabbitmq
-    # Note: No HTTP port exposed as adapter runs in queue-only mode
-    volumes:
-      - ../config/onix-bpp:/app/config/message-baised/rabbit-mq/onix-bpp
-      - ../schema:/app/schemas:ro
-    environment:
-      - CONFIG_FILE=/app/config/message-baised/rabbit-mq/onix-bpp/adapter.yaml
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=admin
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis-bpp:
-        condition: service_healthy
-    networks:
-      - onix-network
-    restart: unless-stopped
-
-networks:
-  onix-network:
-    driver: bridge
-```
-
-Run with:
+Use the provided `docker-compose-onix-bap-rabbit-mq-plugin.yml`:
 
 ```bash
-docker-compose up -d
+docker-compose -f docker-compose-onix-bap-rabbit-mq-plugin.yml up -d
 ```
 
-### Building Locally
+### BPP Plugin
 
-If you need to build locally, update the service definition:
-
-```yaml
-  onix-bpp-plugin-rabbitmq:
-    build:
-      context: ../..
-      dockerfile: docker_plugin/rabbit-mq/docker-bpp-rabbitmq-plugin/Dockerfile
-    # ... rest of the configuration
-```
-
-## Running with Docker Run
+Use the provided `docker-compose-onix-bpp-rabbit-mq-plugin.yml`:
 
 ```bash
-docker run -d \
-  --name onix-bpp-plugin-rabbitmq \
-  -v $(pwd)/config/onix-bpp:/app/config/message-baised/rabbit-mq/onix-bpp \
-  -v $(pwd)/schema:/app/schemas:ro \
-  -e CONFIG_FILE=/app/config/message-baised/rabbit-mq/onix-bpp/adapter.yaml \
-  -e RABBITMQ_USERNAME=admin \
-  -e RABBITMQ_PASSWORD=admin \
-  --network onix-network \
-  manendrapalsingh/onix-bpp-plugin-rabbit-mq:latest
+docker-compose -f docker-compose-onix-bpp-rabbit-mq-plugin.yml up -d
 ```
 
 ## Configuration
@@ -155,38 +124,150 @@ docker run -d \
 ### Required Services
 
 1. **RabbitMQ**: Message queue server (default: `rabbitmq:5672`)
-
-2. **Redis**: Cache server (default: `redis-bpp:6379`)
-
+2. **Redis**: Cache server 
+   - BAP: `redis-bap:6379`
+   - BPP: `redis-bpp:6379`
 3. **Registry**: Mock registry service (default: `http://mock-registry:3030`)
 
 ### Environment Variables
 
-- `CONFIG_FILE`: Path to the adapter configuration file (default: `/app/config/message-baised/rabbit-mq/onix-bpp/adapter.yaml`)
+- `CONFIG_FILE`: Path to the adapter configuration file
+  - BAP: `/app/config/message-baised/rabbit-mq/onix-bap/adapter.yaml`
+  - BPP: `/app/config/message-baised/rabbit-mq/onix-bpp/adapter.yaml`
 
-- `RABBITMQ_USERNAME`: RabbitMQ username (required)
+### RabbitMQ Credentials Configuration
 
-- `RABBITMQ_PASSWORD`: RabbitMQ password (required)
+**RabbitMQ credentials are configured in the `adapter.yaml` file**, not via environment variables. Each publisher and consumer plugin requires `username` and `password` in its configuration:
+
+```yaml
+# Publisher configuration
+publisher:
+  id: publisher
+  config:
+    addr: rabbitmq:5672
+    exchange: beckn_exchange
+    durable: "true"
+    username: admin
+    password: admin
+
+# RabbitMQ Consumer configuration
+rabbitmqConsumer:
+  id: rabbitmqconsumer
+  config:
+    addr: rabbitmq:5672
+    exchange: beckn_exchange
+    routingKeys: "bap.discover,bap.select,..."
+    queueName: "bap_caller_queue"
+    durable: "true"
+    autoDelete: "false"
+    exclusive: "false"
+    noWait: "false"
+    autoAck: "false"
+    prefetchCount: "10"
+    consumerThreads: "2"
+    queueArgs: ""
+    username: admin
+    password: admin
+```
+
+**Note**: The default credentials in the provided configuration files are `admin`/`admin` to match the Docker Compose setup. For production deployments, replace these with your actual RabbitMQ credentials and consider using secret management tools to inject credentials securely.
+
+### HTTP Configuration
+
+**HTTP server is required** for the Receiver modules to receive HTTP requests. The HTTP configuration must be enabled in `adapter.yaml`:
+
+**BAP Adapter:**
+```yaml
+http:
+  port: 8001
+  timeout:
+    read: 30
+    write: 30
+    idle: 30
+```
+
+**BPP Adapter:**
+```yaml
+http:
+  port: 8002
+  timeout:
+    read: 30
+    write: 30
+    idle: 30
+```
+
+- **BAP Port**: 8001 (must be exposed in Docker Compose)
+- **BPP Port**: 8002 (must be exposed in Docker Compose)
+- **Purpose**: Enables Receiver modules to receive HTTP requests/callbacks
+- **Required**: Yes - The Receiver modules use handler type `std` which requires an HTTP server
 
 ### RabbitMQ Configuration
 
-The adapter consumes messages from RabbitMQ with the following configuration:
+#### Exchange Configuration
+
+- **Exchange Name**: `beckn_exchange`
+- **Exchange Type**: Topic exchange (allows routing based on routing keys)
+- **Durability**: Durable (survives broker restarts)
+
+#### BAP bapTxnCaller (Queue Consumer)
+
+The adapter consumes requests from BAP Backend with the following configuration:
 
 - **Exchange**: `beckn_exchange` (topic exchange, durable)
-
-- **Queue**: `bpp_receiver_queue` (durable)
-
-- **Routing Keys**: 
-
-  - `bpp.discover` - Phase 1 search requests from CDS
-
-  - `bpp.select`, `bpp.init`, `bpp.confirm`, `bpp.status`, `bpp.track`, `bpp.cancel`, `bpp.update`, `bpp.rating`, `bpp.support` - Phase 2+ requests from BAP
-
+- **Queue**: `bap_caller_queue` (durable)
+- **Routing Keys** (requests from BAP Backend): 
+  - `bap.discover` - Discover request
+  - `bap.select`, `bap.init`, `bap.confirm`, `bap.status`, `bap.track`, `bap.cancel`, `bap.update`, `bap.rating`, `bap.support` - Other requests
 - **Acknowledgment**: Manual (`autoAck: false`)
-
 - **Prefetch Count**: 10
-
 - **Consumer Threads**: 2
+
+#### BAP bapTxnReceiver (HTTP Handler + Publisher)
+
+The adapter publishes callbacks to BAP Backend with the following configuration:
+
+- **Exchange**: `beckn_exchange` (topic exchange, durable)
+- **HTTP Endpoint**: `/bap/receiver/` (receives HTTP requests from BPP adapter)
+- **Publishing Routing Keys** (callbacks to BAP Backend):
+  - `bap.on_discover` - Phase 1 aggregated search results
+  - `bap.on_select`, `bap.on_init`, `bap.on_confirm`, `bap.on_status`, `bap.on_track`, `bap.on_cancel`, `bap.on_update`, `bap.on_rating`, `bap.on_support` - Phase 2+ callbacks
+
+#### BPP bppTxnCaller (Queue Consumer)
+
+The adapter consumes callbacks from BPP Backend with the following configuration:
+
+- **Exchange**: `beckn_exchange` (topic exchange, durable)
+- **Queue**: `bpp_caller_queue` (durable)
+- **Routing Keys** (callbacks from BPP Backend): 
+  - `bpp.on_discover` - Phase 1 on_discover callback
+  - `bpp.on_select`, `bpp.on_init`, `bpp.on_confirm`, `bpp.on_status`, `bpp.on_track`, `bpp.on_cancel`, `bpp.on_update`, `bpp.on_rating`, `bpp.on_support` - Phase 2+ callbacks
+- **Acknowledgment**: Manual (`autoAck: false`)
+- **Prefetch Count**: 10
+- **Consumer Threads**: 2
+
+#### BPP bppTxnReceiver (HTTP Handler + Publisher)
+
+The adapter publishes requests to BPP Backend with the following configuration:
+
+- **Exchange**: `beckn_exchange` (topic exchange, durable)
+- **HTTP Endpoint**: `/bpp/receiver/` (receives HTTP requests from BAP adapter)
+- **Publishing Routing Keys** (requests to BPP Backend):
+  - `bpp.discover` - Phase 1 discover request
+  - `bpp.select`, `bpp.init`, `bpp.confirm`, `bpp.status`, `bpp.track`, `bpp.cancel`, `bpp.update`, `bpp.rating`, `bpp.support` - Phase 2+ requests
+
+#### Queue Structure Summary
+
+**BAP Queues and Routing Keys**:
+- **Queue**: `bap_caller_queue` (consumed by `bapTxnCaller`)
+  - Routing Keys: `bap.discover`, `bap.select`, `bap.init`, `bap.confirm`, `bap.status`, `bap.track`, `bap.cancel`, `bap.update`, `bap.rating`, `bap.support`
+- **Publishing Routing Keys** (published by `bapTxnReceiver`):
+  - `bap.on_discover`, `bap.on_select`, `bap.on_init`, `bap.on_confirm`, `bap.on_status`, `bap.on_track`, `bap.on_cancel`, `bap.on_update`, `bap.on_rating`, `bap.on_support`
+
+**BPP Queues and Routing Keys**:
+- **Queue**: `bpp_caller_queue` (consumed by `bppTxnCaller`)
+  - Routing Keys: `bpp.on_discover`, `bpp.on_select`, `bpp.on_init`, `bpp.on_confirm`, `bpp.on_status`, `bpp.on_track`, `bpp.on_cancel`, `bpp.on_update`, `bpp.on_rating`, `bpp.on_support`
+- **Publishing Routing Keys** (published by `bppTxnReceiver`):
+  - `bpp.discover`, `bpp.select`, `bpp.init`, `bpp.confirm`, `bpp.status`, `bpp.track`, `bpp.cancel`, `bpp.update`, `bpp.rating`, `bpp.support`
 
 #### Queue Configuration Options
 
@@ -207,13 +288,11 @@ rabbitmqConsumer:
 The `queueArgs` parameter allows you to configure advanced RabbitMQ queue options. It accepts either JSON format or key=value pairs:
 
 **JSON Format Example:**
-
 ```yaml
 queueArgs: '{"x-message-ttl":3600000,"x-max-length":10000,"x-max-priority":10}'
 ```
 
 **Key-Value Format Example:**
-
 ```yaml
 queueArgs: "x-message-ttl=3600000,x-max-length=10000,x-dead-letter-exchange=dlx"
 ```
@@ -234,11 +313,10 @@ queueArgs: "x-message-ttl=3600000,x-max-length=10000,x-dead-letter-exchange=dlx"
 | `x-queue-mode` | string | Queue mode: `"default"` or `"lazy"` | `"lazy"` |
 
 **Example Configuration with Queue Arguments:**
-
 ```yaml
 rabbitmqConsumer:
   config:
-    queueName: "bpp_receiver_queue"
+    queueName: "bap_caller_queue"
     durable: "true"
     autoDelete: "false"
     exclusive: "false"
@@ -249,33 +327,69 @@ rabbitmqConsumer:
 
 ### Processing Steps
 
-The adapter processes messages through:
+#### BAP bapTxnCaller (Queue Consumer)
 
-- `validateSign` - Validates message signatures
-
-- `addRoute` - (commented, can be enabled)
-
-- `validateSchema` - (commented, can be enabled)
+Processes requests from BAP Backend through:
+- `validateSchema` - Validates message schema
+- `addRoute` - Determines routing destination (BPP or CDS)
+- `sign` - Signs the message before forwarding
 
 After processing:
-
-- **Success**: Sends ACK → message removed from queue
-
+- **Success**: Routes to BPP/CDS via HTTP, sends ACK → message removed from queue
 - **Error**: Sends NACK with requeue → message retried
+
+#### BAP bapTxnReceiver (HTTP Handler)
+
+Processes callbacks from BPP adapter through:
+- `validateSign` - Validates message signatures
+- `validateSchema` - Validates message schema
+- `addRoute` - Determines publishing routing key
+
+After processing:
+- **Success**: Publishes to RabbitMQ with appropriate routing key
+- **Error**: Returns HTTP error response
+
+#### BPP bppTxnCaller (Queue Consumer)
+
+Processes callbacks from BPP Backend through:
+- `validateSchema` - Validates message schema
+- `addRoute` - Determines routing destination (BAP adapter or CDS)
+- `sign` - Signs the message before forwarding
+
+After processing:
+- **Success**: Routes to BAP/CDS via HTTP, sends ACK → message removed from queue
+- **Error**: Sends NACK with requeue → message retried
+
+#### BPP bppTxnReceiver (HTTP Handler)
+
+Processes requests from BAP adapter through:
+- `validateSign` - Validates message signatures
+- `validateSchema` - Validates message schema
+- `addRoute` - Determines publishing routing key
+
+After processing:
+- **Success**: Publishes to RabbitMQ with appropriate routing key
+- **Error**: Returns HTTP error response
+
+## Message Flow
+
+### Flow 1: BAP Backend → BPP Backend (Requests)
+
+1. **BAP Backend**: Publishes requests to `beckn_exchange` with routing keys like `bap.discover`, `bap.select`, etc.
+2. **bapTxnCaller**: Consumes from `bap_caller_queue`, processes, routes to BPP adapter via HTTP
+3. **bppTxnReceiver**: Receives HTTP request at `/bpp/receiver/`, processes, publishes to RabbitMQ
+4. **BPP Backend**: Consumes from queues bound to routing keys like `bpp.discover`, `bpp.select`, etc.
+
+### Flow 2: BPP Backend → BAP Backend (Callbacks)
+
+1. **BPP Backend**: Publishes callbacks to `beckn_exchange` with routing keys like `bpp.on_discover`, `bpp.on_select`, etc.
+2. **bppTxnCaller**: Consumes from `bpp_caller_queue`, processes, routes to BAP adapter via HTTP
+3. **bapTxnReceiver**: Receives HTTP request at `/bap/receiver/`, processes, publishes to RabbitMQ
+4. **BAP Backend**: Consumes callbacks from queues bound to routing keys like `bap.on_discover`, `bap.on_select`, etc.
 
 ## Producer and Consumer Examples
 
-### Message Flow
-
-1. **Producer (BPP App)**: Publishes messages to `beckn_exchange` with routing keys like `bpp.discover`
-
-2. **Adapter Consumer**: Consumes from `bpp_receiver_queue`, processes, sends ACK/NACK
-
-3. **Adapter Publisher**: Publishes responses to `beckn_exchange` (via publisher plugin)
-
-4. **Consumer (BPP App)**: Consumes responses from queues
-
-### Producer Examples (Publishing Messages TO Adapter)
+### BAP Backend Publishing Requests
 
 #### Node.js Producer
 
@@ -283,7 +397,7 @@ After processing:
 const amqp = require('amqplib');
 
 async function publishMessage() {
-  const connection = await amqp.connect('amqp://admin:admin@localhost:5672');
+  const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
   const channel = await connection.createChannel();
   
   const exchange = 'beckn_exchange';
@@ -304,7 +418,7 @@ async function publishMessage() {
     }
   };
   
-  const routingKey = 'bpp.discover';
+  const routingKey = 'bap.discover';  // Request routing key (from BAP Backend)
   const messageBuffer = Buffer.from(JSON.stringify(message));
   
   channel.publish(exchange, routingKey, messageBuffer, {
@@ -322,197 +436,7 @@ async function publishMessage() {
 publishMessage().catch(console.error);
 ```
 
-#### Go Producer
-
-```go
-package main
-
-import (
-    "context"
-    "encoding/json"
-    "log"
-    "time"
-    
-    "github.com/rabbitmq/amqp091-go"
-)
-
-func main() {
-    conn, err := amqp091.Dial("amqp://admin:admin@localhost:5672/")
-    if err != nil {
-        log.Fatalf("Failed to connect: %v", err)
-    }
-    defer conn.Close()
-    
-    ch, err := conn.Channel()
-    if err != nil {
-        log.Fatalf("Failed to open channel: %v", err)
-    }
-    defer ch.Close()
-    
-    exchange := "beckn_exchange"
-    err = ch.ExchangeDeclare(
-        exchange,
-        "topic",
-        true,
-        false,
-        false,
-        false,
-        nil,
-    )
-    if err != nil {
-        log.Fatalf("Failed to declare exchange: %v", err)
-    }
-    
-    message := map[string]interface{}{
-        "context": map[string]interface{}{
-            "domain": "ev_charging_network",
-            "action": "discover",
-            "bap_id": "example-bap.com",
-            "bpp_id": "example-bpp.com",
-            "transaction_id": "123e4567-e89b-12d3-a456-426614174000",
-            "message_id": "msg-123",
-            "timestamp": time.Now().Format(time.RFC3339),
-        },
-        "message": map[string]interface{}{
-            // Your message payload
-        },
-    }
-    
-    body, _ := json.Marshal(message)
-    routingKey := "bpp.discover"
-    
-    err = ch.PublishWithContext(
-        context.Background(),
-        exchange,
-        routingKey,
-        false,
-        false,
-        amqp091.Publishing{
-            ContentType:  "application/json",
-            DeliveryMode: amqp091.Persistent,
-            Body:         body,
-        },
-    )
-    if err != nil {
-        log.Fatalf("Failed to publish: %v", err)
-    }
-    
-    log.Printf("Published message to %s", routingKey)
-}
-```
-
-#### Python Producer
-
-```python
-import pika
-import json
-from datetime import datetime
-
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(
-        host='localhost',
-        port=5672,
-        credentials=pika.PlainCredentials('admin', 'admin')
-    )
-)
-channel = connection.channel()
-
-exchange = 'beckn_exchange'
-channel.exchange_declare(exchange=exchange, exchange_type='topic', durable=True)
-
-message = {
-    "context": {
-        "domain": "ev_charging_network",
-        "action": "discover",
-        "bap_id": "example-bap.com",
-        "bpp_id": "example-bpp.com",
-        "transaction_id": "123e4567-e89b-12d3-a456-426614174000",
-        "message_id": "msg-123",
-        "timestamp": datetime.now().isoformat()
-    },
-    "message": {
-        # Your message payload
-    }
-}
-
-routing_key = 'bpp.discover'
-channel.basic_publish(
-    exchange=exchange,
-    routing_key=routing_key,
-    body=json.dumps(message),
-    properties=pika.BasicProperties(
-        delivery_mode=2,  # Make message persistent
-        content_type='application/json'
-    )
-)
-
-print(f"Published message to {routing_key}")
-connection.close()
-```
-
-#### Java Producer
-
-```java
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.AMQP;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-
-public class Producer {
-    private static final String EXCHANGE = "beckn_exchange";
-    private static final String ROUTING_KEY = "bpp.discover";
-    
-    public static void main(String[] args) throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        factory.setPort(5672);
-        factory.setUsername("admin");
-        factory.setPassword("admin");
-        
-        try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
-            
-            channel.exchangeDeclare(EXCHANGE, "topic", true);
-            
-            Map<String, Object> message = new HashMap<>();
-            Map<String, Object> context = new HashMap<>();
-            context.put("domain", "ev_charging_network");
-            context.put("action", "discover");
-            context.put("bap_id", "example-bap.com");
-            context.put("bpp_id", "example-bpp.com");
-            context.put("transaction_id", "123e4567-e89b-12d3-a456-426614174000");
-            context.put("message_id", "msg-123");
-            context.put("timestamp", Instant.now().toString());
-            
-            message.put("context", context);
-            message.put("message", new HashMap<>()); // Your payload
-            
-            ObjectMapper mapper = new ObjectMapper();
-            String messageJson = mapper.writeValueAsString(message);
-            
-            channel.basicPublish(
-                EXCHANGE,
-                ROUTING_KEY,
-                new AMQP.BasicProperties.Builder()
-                    .contentType("application/json")
-                    .deliveryMode(2) // Persistent
-                    .build(),
-                messageJson.getBytes()
-            );
-            
-            System.out.println("Published message to " + ROUTING_KEY);
-        }
-    }
-}
-```
-
-### Consumer Examples (Consuming Messages FROM Adapter)
-
-The adapter publishes responses to `beckn_exchange` with routing keys. Your BPP app should consume these.
+### BAP Backend Consuming Callbacks
 
 #### Node.js Consumer
 
@@ -520,17 +444,17 @@ The adapter publishes responses to `beckn_exchange` with routing keys. Your BPP 
 const amqp = require('amqplib');
 
 async function consumeMessages() {
-  const connection = await amqp.connect('amqp://admin:admin@localhost:5672');
+  const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
   const channel = await connection.createChannel();
   
   const exchange = 'beckn_exchange';
   await channel.assertExchange(exchange, 'topic', { durable: true });
   
-  // Consume from the queue that adapter publishes to
-  // Based on your routing config, adapter publishes to routing keys like:
-  // bpp.discover, bpp.select, etc.
-  const routingKey = 'bpp.discover';
-  const queueName = `bpp_${routingKey.replace('.', '_')}_queue`;
+  // Consume callbacks from the adapter
+  // The adapter publishes to routing keys like:
+  // bap.on_discover, bap.on_select, etc.
+  const routingKey = 'bap.on_discover';
+  const queueName = `bap_${routingKey.replace(/\./g, '_')}_queue`;
   
   const queue = await channel.assertQueue(queueName, { durable: true });
   await channel.bindQueue(queue.queue, exchange, routingKey);
@@ -544,9 +468,9 @@ async function consumeMessages() {
     if (msg) {
       try {
         const content = JSON.parse(msg.content.toString());
-        console.log('Received message:', content);
+        console.log('Received callback:', content);
         
-        // Process your message here
+        // Process your callback here
         // ...
         
         // Acknowledge after successful processing
@@ -565,232 +489,277 @@ async function consumeMessages() {
 consumeMessages().catch(console.error);
 ```
 
-#### Go Consumer
+### BPP Backend Publishing Callbacks
 
-```go
-package main
+#### Node.js Producer
 
-import (
-    "encoding/json"
-    "log"
-    
-    "github.com/rabbitmq/amqp091-go"
-)
+```javascript
+const amqp = require('amqplib');
 
-func main() {
-    conn, err := amqp091.Dial("amqp://admin:admin@localhost:5672/")
-    if err != nil {
-        log.Fatalf("Failed to connect: %v", err)
+async function publishMessage() {
+  const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
+  const channel = await connection.createChannel();
+  
+  const exchange = 'beckn_exchange';
+  await channel.assertExchange(exchange, 'topic', { durable: true });
+  
+  const message = {
+    context: {
+      domain: "ev_charging_network",
+      action: "on_discover",
+      bap_id: "example-bap.com",
+      bpp_id: "example-bpp.com",
+      transaction_id: "123e4567-e89b-12d3-a456-426614174000",
+      message_id: "msg-123",
+      timestamp: new Date().toISOString()
+    },
+    message: {
+      // Your message payload
     }
-    defer conn.Close()
-    
-    ch, err := conn.Channel()
-    if err != nil {
-        log.Fatalf("Failed to open channel: %v", err)
-    }
-    defer ch.Close()
-    
-    exchange := "beckn_exchange"
-    routingKey := "bpp.discover"
-    
-    err = ch.ExchangeDeclare(
-        exchange,
-        "topic",
-        true,
-        false,
-        false,
-        false,
-        nil,
-    )
-    if err != nil {
-        log.Fatalf("Failed to declare exchange: %v", err)
-    }
-    
-    queue, err := ch.QueueDeclare(
-        "bpp_discover_queue",
-        true,
-        false,
-        false,
-        false,
-        nil,
-    )
-    if err != nil {
-        log.Fatalf("Failed to declare queue: %v", err)
-    }
-    
-    err = ch.QueueBind(
-        queue.Name,
-        routingKey,
-        exchange,
-        false,
-        nil,
-    )
-    if err != nil {
-        log.Fatalf("Failed to bind queue: %v", err)
-    }
-    
-    err = ch.Qos(1, 0, false)
-    if err != nil {
-        log.Fatalf("Failed to set QoS: %v", err)
-    }
-    
-    msgs, err := ch.Consume(
-        queue.Name,
-        "",
-        false,
-        false,
-        false,
-        false,
-        nil,
-    )
-    if err != nil {
-        log.Fatalf("Failed to register consumer: %v", err)
-    }
-    
-    log.Printf("Waiting for messages on %s. Press CTRL+C to exit", routingKey)
-    
-    for msg := range msgs {
-        var message map[string]interface{}
-        if err := json.Unmarshal(msg.Body, &message); err != nil {
-            log.Printf("Error parsing message: %v", err)
-            msg.Nack(false, true)
-            continue
-        }
+  };
+  
+  const routingKey = 'bpp.on_discover';  // Callback routing key
+  const messageBuffer = Buffer.from(JSON.stringify(message));
+  
+  channel.publish(exchange, routingKey, messageBuffer, {
+    persistent: true,
+    contentType: 'application/json'
+  });
+  
+  console.log(`Published message to ${routingKey}`);
+  
+  setTimeout(() => {
+    connection.close();
+  }, 500);
+}
+
+publishMessage().catch(console.error);
+```
+
+### BPP Backend Consuming Requests
+
+#### Node.js Consumer
+
+```javascript
+const amqp = require('amqplib');
+
+async function consumeMessages() {
+  const connection = await amqp.connect('amqp://guest:guest@localhost:5672');
+  const channel = await connection.createChannel();
+  
+  const exchange = 'beckn_exchange';
+  await channel.assertExchange(exchange, 'topic', { durable: true });
+  
+  // Consume requests from the adapter
+  // The adapter publishes to routing keys like:
+  // bpp.discover, bpp.select, etc.
+  const routingKey = 'bpp.discover';
+  const queueName = `bpp_${routingKey.replace(/\./g, '_')}_queue`;
+  
+  const queue = await channel.assertQueue(queueName, { durable: true });
+  await channel.bindQueue(queue.queue, exchange, routingKey);
+  
+  // Set prefetch to process one message at a time
+  channel.prefetch(1);
+  
+  console.log(`Waiting for messages on ${routingKey}. To exit press CTRL+C`);
+  
+  channel.consume(queue.queue, (msg) => {
+    if (msg) {
+      try {
+        const content = JSON.parse(msg.content.toString());
+        console.log('Received request:', content);
         
-        log.Printf("Received message: %+v", message)
-        
-        // Process your message here
+        // Process your request here
         // ...
         
-        msg.Ack(false)
+        // Acknowledge after successful processing
+        channel.ack(msg);
+      } catch (error) {
+        console.error('Error processing message:', error);
+        // Reject and requeue on error
+        channel.nack(msg, false, true);
+      }
     }
+  }, {
+    noAck: false // Manual acknowledgment
+  });
 }
+
+consumeMessages().catch(console.error);
 ```
 
-#### Python Consumer
+## RabbitMQ Management UI
 
-```python
-import pika
-import json
+The RabbitMQ Management Plugin is enabled by default in the Docker Compose setup and provides a web-based UI for monitoring and managing RabbitMQ. This is essential for testing consumer behavior, monitoring queues, and debugging message flow.
 
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(
-        host='localhost',
-        port=5672,
-        credentials=pika.PlainCredentials('admin', 'admin')
-    )
-)
-channel = connection.channel()
+### Accessing the Management UI
 
-exchange = 'beckn_exchange'
-routing_key = 'bpp.discover'
+1. **Start the services**:
+   ```bash
+   docker-compose -f docker-compose-onix-bap-rabbit-mq-plugin.yml up -d
+   # Or for BPP:
+   docker-compose -f docker-compose-onix-bpp-rabbit-mq-plugin.yml up -d
+   ```
 
-channel.exchange_declare(exchange=exchange, exchange_type='topic', durable=True)
+2. **Open the Management UI**:
+   - URL: `http://localhost:15672`
+   - Username: `admin` (default, as configured in docker-compose)
+   - Password: `admin` (default, as configured in docker-compose)
 
-queue_name = 'bpp_discover_queue'
-channel.queue_declare(queue=queue_name, durable=True)
-channel.queue_bind(exchange=exchange, queue=queue_name, routing_key=routing_key)
+### Key Features for Monitoring Adapters
 
-channel.basic_qos(prefetch_count=1)
+#### 1. **Overview Dashboard**
+   - **Location**: Home page after login
+   - **What to Monitor**:
+     - Total messages published/consumed
+     - Message rates (messages per second)
+     - Connection count
+     - Queue count
+     - Consumer count
 
-print(f'Waiting for messages on {routing_key}. To exit press CTRL+C')
+#### 2. **Queues Tab** - Monitor Queue Status
+   - **Location**: Click "Queues" in the top navigation
+   - **Key Queues to Monitor**:
+     - `bap_caller_queue` - Messages consumed by BAP adapter's `bapTxnCaller`
+     - `bpp_caller_queue` - Messages consumed by BPP adapter's `bppTxnCaller`
+   
+   **What to Check**:
+   - **Ready**: Number of messages waiting to be consumed
+   - **Unacked**: Messages being processed (not yet acknowledged)
+   - **Total**: Total messages that have passed through the queue
+   - **Consumers**: Number of active consumers connected to the queue
+   - **Consumer utilization**: How efficiently consumers are processing messages
+   - **Message rates**: Messages per second being published/consumed
 
-def callback(ch, method, properties, body):
-    try:
-        message = json.loads(body)
-        print(f"Received message: {message}")
-        
-        # Process your message here
-        # ...
-        
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-    except Exception as e:
-        print(f"Error processing message: {e}")
-        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+   **Testing Consumer Behavior**:
+   - Watch the "Ready" count decrease as consumers process messages
+   - Monitor "Unacked" to see messages currently being processed
+   - If "Ready" grows, consumers may be slower than message producers
+   - If "Unacked" stays high, consumers may be stuck or processing slowly
 
-channel.basic_consume(
-    queue=queue_name,
-    on_message_callback=callback,
-    auto_ack=False
-)
+#### 3. **Exchanges Tab** - Monitor Message Publishing
+   - **Location**: Click "Exchanges" in the top navigation
+   - **Key Exchange**: `beckn_exchange`
+   
+   **What to Check**:
+   - **Publish rate**: Messages per second being published
+   - **Bindings**: See which queues are bound to which routing keys
+   - Click on `beckn_exchange` to see all bound queues and routing keys
 
-channel.start_consuming()
-```
+#### 4. **Connections Tab** - Monitor Consumer Connections
+   - **Location**: Click "Connections" in the top navigation
+   - **What to Check**:
+     - Active connections from ONIX adapters
+     - Connection state (running, idle)
+     - Channels per connection
+     - Message rates per connection
 
-#### Java Consumer
+#### 5. **Channels Tab** - Monitor Consumer Channels
+   - **Location**: Click "Channels" in the top navigation
+   - **What to Check**:
+     - Active channels (each consumer uses a channel)
+     - Prefetch count (how many unacked messages per consumer)
+     - Consumer count per channel
+     - Message acknowledgment rates
 
-```java
-import com.rabbitmq.client.*;
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
+#### 6. **Publish/Get Messages** - Test Message Publishing
+   - **Location**: Go to "Exchanges" → Click on `beckn_exchange` → Scroll to "Publish message"
+   - **How to Test**:
+     1. Select routing key (e.g., `bap.discover`, `bap.select`, etc. for BAP or `bpp.on_discover`, `bpp.on_select`, etc. for BPP)
+     2. Enter message payload (JSON format)
+     3. Click "Publish message"
+     4. Monitor the target queue to see if the message appears
+     5. Watch consumer process the message
 
-public class Consumer {
-    private static final String EXCHANGE = "beckn_exchange";
-    private static final String ROUTING_KEY = "bpp.discover";
-    private static final String QUEUE_NAME = "bpp_discover_queue";
-    
-    public static void main(String[] args) throws IOException, TimeoutException {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        factory.setPort(5672);
-        factory.setUsername("admin");
-        factory.setPassword("admin");
-        
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-        
-        channel.exchangeDeclare(EXCHANGE, "topic", true);
-        channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-        channel.queueBind(QUEUE_NAME, EXCHANGE, ROUTING_KEY);
-        
-        channel.basicQos(1);
-        
-        System.out.println("Waiting for messages on " + ROUTING_KEY + ". Press CTRL+C to exit");
-        
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            try {
-                String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println("Received message: " + message);
-                
-                // Process your message here
-                // ...
-                
-                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-            } catch (Exception e) {
-                System.err.println("Error processing message: " + e);
-                channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
-            }
-        };
-        
-        channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> {});
-    }
-}
-```
+   **Example Test Message** (for `bap.discover`):
+   ```json
+   {
+     "context": {
+       "version": "2.0.0",
+       "action": "discover",
+       "domain": "beckn.one:deg:ev-charging",
+       "location": {
+         "country": { "code": "IND" },
+         "city": { "code": "std:080" }
+       },
+       "bap_id": "example-bap.com",
+       "bap_uri": "http://example-bap.com",
+       "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+       "message_id": "110e8400-e29b-41d4-a716-446655440009",
+       "timestamp": "2025-01-27T10:00:00Z",
+       "ttl": "PT30S"
+     },
+     "message": {
+       "spatial": [{
+         "op": "s_dwithin",
+         "targets": "$['beckn:availableAt'][*]['geo']",
+         "geometry": {
+           "type": "Point",
+           "coordinates": [77.59, 12.94]
+         },
+         "distanceMeters": 10000
+       }]
+     }
+   }
+   ```
 
-## Integration with Existing System
+#### 7. **Get Messages** - Manually Consume Messages
+   - **Location**: Go to "Queues" → Click on a queue → Scroll to "Get messages"
+   - **How to Use**:
+     1. Select acknowledgment mode (Ack mode: `Nack message requeue true/false`)
+     2. Set number of messages to retrieve
+     3. Click "Get messages"
+     4. View message payload and headers
+   
+   **Note**: This is useful for debugging but doesn't test actual consumer behavior. Use this to inspect messages without consuming them permanently.
 
-### Adding to Existing Docker Compose
+### Testing Consumer Behavior - Step by Step
 
-```yaml
-services:
-  # ... your existing services ...
+#### Test 1: Verify Consumers are Connected
+1. Go to **Queues** → Click `bap_caller_queue` (or `bpp_caller_queue`)
+2. Check **"Consumers"** column - should show 2 (from adapter configuration: `consumerThreads: "2"`)
+3. If 0, check adapter logs: `docker logs onix-bap-plugin-rabbitmq` or `docker logs onix-bpp-plugin-rabbitmq`
 
-  onix-bpp-plugin-rabbitmq:
-    image: manendrapalsingh/onix-bpp-plugin-rabbit-mq:latest
-    container_name: onix-bpp-plugin-rabbitmq
-    volumes:
-      - ./config/onix-bpp:/app/config/message-baised/rabbit-mq/onix-bpp
-      - ./schema:/app/schemas:ro
-    environment:
-      - CONFIG_FILE=/app/config/message-baised/rabbit-mq/onix-bpp/adapter.yaml
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=admin
-    networks:
-      - your-existing-network
-    depends_on:
-      - rabbitmq
-      - redis-bpp
-    restart: unless-stopped
+#### Test 2: Monitor Message Consumption
+1. Publish a test message to `beckn_exchange` with routing key `bap.discover` (for BAP) or `bpp.on_discover` (for BPP)
+2. Go to **Queues** → `bap_caller_queue` (or `bpp_caller_queue`)
+3. Watch **"Ready"** count - should increase briefly
+4. Watch **"Unacked"** count - should increase as consumer processes
+5. Watch **"Ready"** decrease to 0 as message is consumed
+6. Check **"Message rates"** - should show consumption rate
+
+#### Test 3: Test Consumer Prefetch
+1. Publish multiple messages (e.g., 10 messages)
+2. Monitor **"Unacked"** - should not exceed prefetch count (configured as 10 in adapter: `prefetchCount: "10"`)
+3. If messages are processed faster than prefetch, **"Unacked"** should stay at prefetch limit
+4. As messages are acknowledged, new ones should be delivered
+
+#### Test 4: Test Consumer Failure/Recovery
+1. Stop a consumer: `docker-compose stop onix-bap-plugin-rabbitmq`
+2. Publish messages - they should accumulate in **"Ready"**
+3. Restart consumer: `docker-compose start onix-bap-plugin-rabbitmq`
+4. Watch **"Ready"** decrease as consumer resumes processing
+
+### Using RabbitMQ CLI Tools (Alternative)
+
+If you prefer command-line tools:
+
+```bash
+# List queues
+docker exec rabbitmq rabbitmqctl list_queues
+
+# List exchanges
+docker exec rabbitmq rabbitmqctl list_exchanges
+
+# List bindings
+docker exec rabbitmq rabbitmqctl list_bindings
+
+# Get queue info
+docker exec rabbitmq rabbitmqctl list_queues name messages consumers
+
+# Monitor queue in real-time
+watch -n 1 'docker exec rabbitmq rabbitmqctl list_queues name messages consumers'
 ```
 
 ## Troubleshooting
@@ -798,45 +767,108 @@ services:
 ### RabbitMQ Connection Issues
 
 - Verify RabbitMQ is running: `docker ps | grep rabbitmq`
-
 - Check RabbitMQ logs: `docker logs rabbitmq`
-
 - Verify network connectivity: Ensure plugin container can reach `rabbitmq:5672`
-
-- Check credentials: Ensure `RABBITMQ_USERNAME` and `RABBITMQ_PASSWORD` environment variables are set
+- Check credentials: Ensure `username` and `password` are configured in `adapter.yaml` for both `publisher` and `rabbitmqConsumer` plugins
 
 ### Messages Not Consumed
 
 - Verify queue exists: Access RabbitMQ Management UI at `http://localhost:15672`
-
 - Check queue bindings: Ensure queue is bound to exchange with correct routing key
-
-- Review adapter logs: `docker logs onix-bpp-plugin-rabbitmq`
-
-- Verify routing keys match: Check `routingKeys` in adapter.yaml match your producer
+- Review adapter logs: `docker logs onix-bap-plugin-rabbitmq` or `docker logs onix-bpp-plugin-rabbitmq`
+- Verify routing keys match: 
+  - For BAP: Check `routingKeys` in `bapTxnCaller` config match your BAP Backend producer (e.g., `bap.discover`)
+  - For BPP: Check `routingKeys` in `bppTxnCaller` config match your BPP Backend producer (e.g., `bpp.on_discover`)
 
 ### ACK/NACK Issues
 
 - Check adapter logs for processing errors
-
 - Verify message format matches expected schema
-
 - Check signature validation if `validateSign` step is enabled
-
 - Messages with errors will be NACKed and requeued automatically
 
 ### Config Not Found
 
 - Verify config directory is mounted correctly
-
 - Check that `adapter.yaml` exists at the mounted path
-
 - Verify file permissions
+
+### HTTP Endpoint Issues
+
+- Verify HTTP port is exposed in Docker Compose (8001 for BAP, 8002 for BPP)
+- Check HTTP configuration is enabled in `adapter.yaml`
+- Verify network connectivity between adapters
+- Check adapter logs for HTTP connection errors
+
+### Consumer Issues
+
+1. **No Consumers Connected**:
+   - Check adapter logs: `docker logs onix-bap-plugin-rabbitmq` or `docker logs onix-bpp-plugin-rabbitmq`
+   - Verify RabbitMQ connection in logs
+   - Check network connectivity
+   - Verify credentials in `adapter.yaml` match RabbitMQ server credentials
+   - Use RabbitMQ Management UI → Queues → Check "Consumers" column
+
+2. **Messages Not Being Consumed**:
+   - Verify consumers are connected (Management UI → Queues → Consumers column)
+   - Check if messages are in "Ready" state
+   - Verify routing keys match queue bindings
+   - Check adapter logs for errors
+   - Ensure queue name in config matches the queue name in RabbitMQ
+
+3. **High Unacked Messages**:
+   - Consumers may be processing slowly
+   - Check adapter processing time in logs
+   - Consider increasing consumer threads in adapter config (`consumerThreads`)
+   - Check for errors causing message processing to hang
+   - Verify prefetch count is appropriate for your workload
+
+4. **Messages Accumulating**:
+   - Consumers may be stopped or crashed
+   - Check consumer count in Management UI
+   - Restart consumers if needed: `docker-compose restart onix-bap-plugin-rabbitmq`
+   - Verify message format matches expected schema
+   - Check for repeated NACKs causing message requeue loops
+
+### Configuration Issues
+
+1. **Verify config files are mounted**:
+   ```bash
+   # Check ONIX adapter configs
+   docker exec onix-bap-plugin-rabbitmq ls -la /app/config/message-baised/rabbit-mq/onix-bap/
+   
+   # Check routing configurations
+   docker exec onix-bap-plugin-rabbitmq cat /app/config/message-baised/rabbit-mq/onix-bap/adapter.yaml
+   ```
+
+2. **Check config file syntax**:
+   - Verify YAML syntax is correct
+   - Check indentation (YAML is sensitive to spacing)
+   - Verify all required fields are present
+
+3. **Verify RabbitMQ queue bindings**:
+   - Open RabbitMQ Management UI: `http://localhost:15672`
+   - Navigate to "Exchanges" → `beckn_exchange`
+   - Check "Bindings" to see queue bindings
+   - Verify routing keys match between producer and consumer configs
+
+### Registry Lookup Failures
+
+1. **Verify registry is running**:
+   ```bash
+   curl http://localhost:3030/health
+   ```
+
+2. **Check subscriber registration**:
+   ```bash
+   curl http://localhost:3030/lookup?subscriber_id=example-bap.com
+   ```
+
+3. **Verify registry URL in adapter config**:
+   - Check `registry.url` in `adapter.yaml` matches your registry service
+   - Default: `http://mock-registry:3030`
 
 ## Related Documentation
 
-- [Main Docker Plugin README](../../README.md)
-
 - [Configuration Guide](../../../../CONFIG.md)
-
 - [Setup Guide](../../../../SETUP.md)

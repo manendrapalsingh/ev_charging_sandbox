@@ -1,4 +1,5 @@
 appName: "onix-ev-charging"
+
 log:
   level: debug
   destinations:
@@ -9,24 +10,29 @@ log:
     - subscriber_id
     - module_id
 
-# BAP Adapter with RabbitMQ Integration
-# - bapTxnCaller: Consumes requests from BAP Backend via RabbitMQ and routes to BPP via HTTP
-# - bapTxnReceiver: Receives callbacks from BPP via HTTP and publishes to BAP Backend via RabbitMQ
+# HTTP configuration is required for bapTxnReceiver to receive HTTP requests from BPP-ONIX plugin
+# The bapTxnReceiver module uses handler type "std" which requires HTTP server
+http:
+  port: 8001
+  timeout:
+    read: 30
+    write: 30
+    idle: 30
 
 pluginManager:
   root: /app/plugins
 
 modules:
-  # BAP Receiver - HTTP handler that receives callbacks from BPP and publishes to BAP Backend via RabbitMQ
-  # HTTP Endpoint: /bap/receiver/ (receives HTTP requests from BPP adapter)
-  # Phase 1: Receives aggregated search results from CDS (on_discover) via HTTP
-  # Phase 2+: Receives callbacks directly from BPPs (on_select, on_init, on_confirm, etc.) via HTTP
-  # Publishes callbacks to RabbitMQ with routing keys bap.on_* for BAP Backend to consume
+  # BAP Receiver - Receives HTTP requests from BPP-ONIX and publishes to BAP Backend
+  # Phase 1: Receives on_discover from CDS with aggregated catalog
+  # Phase 2+: Receives callbacks from BPPs (on_select, on_init, on_confirm, etc.)
+  # Publishes messages to BAP Backend via RabbitMQ
   - name: bapTxnReceiver
     path: /bap/receiver/
     handler:
       type: std
       role: bap
+      subscriberId: ev-charging.sandbox1.com
       httpClientConfig:
         maxIdleConns: 1000
         maxIdleConnsPerHost: 200
@@ -43,7 +49,7 @@ modules:
         keyManager:
           id: simplekeymanager
           config:
-            networkParticipant: example-bap.com
+            networkParticipant: ev-charging.sandbox1.com
             keyId: bap-key-1
             signingPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
             signingPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
@@ -69,6 +75,8 @@ modules:
             addr: rabbitmq:5672
             exchange: beckn_exchange
             durable: "true"
+            username: guest
+            password: guest
         middleware:
           - id: reqpreprocessor
             config:
@@ -79,16 +87,16 @@ modules:
         - validateSchema
         - addRoute
 
-  # BAP Caller - Queue consumer that consumes requests from BAP Backend via RabbitMQ
-  # Consumes from bap_caller_queue bound to routing keys bap.* (requests from BAP Backend)
-  # Phase 1: Routes discover requests to CDS for aggregation
-  # Phase 2+: Routes other requests directly to BPP via HTTP (bypasses CDS)
+  # BAP Caller - Consumes requests from BAP Backend via RabbitMQ
+  # Phase 1: Routes discover to external CDS for aggregation
+  # Phase 2+: Routes other requests directly to BPP (bypasses CDS)
   # Uses bpp_uri from context for dynamic routing in Phase 2+
   - name: bapTxnCaller
-    path: /bap/caller/
+    path: ""  # path is not used for queue handlers
     handler:
-      type: std
+      type: queue
       role: bap
+      subscriberId: ev-charging.sandbox1.com
       httpClientConfig:
         maxIdleConns: 1000
         maxIdleConnsPerHost: 200
@@ -105,7 +113,7 @@ modules:
         keyManager:
           id: simplekeymanager
           config:
-            networkParticipant: example-bap.com
+            networkParticipant: ev-charging.sandbox1.com
             keyId: bap-key-1
             signingPrivateKey: xnKF3BIg3Ei+ZEvxBtK0Mm4GRG1Mr0+K9IrxT6CnHEE=
             signingPublicKey: MKA6fln8vmU2Qn80Y7dLzagpaPNqQWOlvGglMo5s0IU=
@@ -119,31 +127,29 @@ modules:
           id: schemavalidator
           config:
             schemaDir: /app/schemas
-        consumer:
-          id: consumer
+        queueHandler:
+          id: queuehandler
           config:
-            addr: rabbitmq:5672
-            exchange: beckn_exchange
-            queue: bap_caller_queue
-            routingKeys:
-              - bap.discover
-              - bap.select
-              - bap.init
-              - bap.confirm
-              - bap.status
-              - bap.track
-              - bap.cancel
-              - bap.update
-              - bap.rating
-              - bap.support
-            durable: "true"
-            autoDelete: "false"
-            exclusive: "false"
-            noWait: "false"
-            queueArgs: ""
-            autoAck: "false"
-            prefetchCount: 10
-            consumerThreads: 2
+            subscriberId: ev-charging.sandbox1.com
+            role: bap
+            consumerType: rabbitmq
+            consumerThreads: "2"
+            consumer.id: rabbitmqconsumer
+            consumer.addr: rabbitmq:5672
+            consumer.exchange: beckn_exchange
+            # Routing keys for requests from BAP Backend (bap.discover, bap.select, etc.)
+            consumer.routingKeys: "bap.discover,bap.select,bap.init,bap.confirm,bap.status,bap.track,bap.cancel,bap.update,bap.rating,bap.support"
+            consumer.queueName: "bap_caller_queue"
+            consumer.durable: "true"
+            consumer.autoDelete: "false"
+            consumer.exclusive: "false"
+            consumer.noWait: "false"
+            consumer.autoAck: "false"
+            consumer.prefetchCount: "10"
+            consumer.queueArgs: ""
+            consumer.username: guest
+            consumer.password: guest
+            steps: '["addRoute", "validateSchema", "sign"]'
         router:
           id: router
           config:
@@ -154,6 +160,8 @@ modules:
             addr: rabbitmq:5672
             exchange: beckn_exchange
             durable: "true"
+            username: guest
+            password: guest
         signer:
           id: signer
         middleware:

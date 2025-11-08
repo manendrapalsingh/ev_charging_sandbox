@@ -9,10 +9,12 @@ services:
       - "5672:5672"   # AMQP port
       - "15672:15672" # Management UI
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
-      RABBITMQ_USERNAME: admin
-      RABBITMQ_PASSWORD: admin
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      # Allow guest user to connect from any host (required for Docker networking)
+      RABBITMQ_DEFAULT_VHOST: /
       # Limit disk storage to 1 GB (1073741824 bytes)
       RABBITMQ_DISK_FREE_LIMIT: "1GB"
     networks:
@@ -70,8 +72,6 @@ services:
       - ../../../../schemas:/app/schemas:ro
     environment:
       - CONFIG_FILE=/app/config/message-baised/rabbit-mq/onix-bap/adapter.yaml
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=admin
     restart: unless-stopped
     depends_on:
       rabbitmq:
@@ -105,8 +105,6 @@ services:
       - ../../../../schemas:/app/schemas:ro
     environment:
       - CONFIG_FILE=/app/config/message-baised/rabbit-mq/onix-bpp/adapter.yaml
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=admin
     restart: unless-stopped
     depends_on:
       rabbitmq:
@@ -182,16 +180,17 @@ services:
       # Config file path
       CONFIG_FILE: /app/config/config.yaml
       # RabbitMQ configuration from config.yaml
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       RABBITMQ_EXCHANGE: beckn_exchange
-      RABBITMQ_USERNAME: admin
-      RABBITMQ_PASSWORD: admin
-      # Defaults configuration from config.yaml
-      DEFAULTS_VERSION: "1.0.0"
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      # Defaults configuration from config.yaml (should match config file)
+      DEFAULTS_VERSION: "2.0.0"
       DEFAULTS_COUNTRY_CODE: "IND"
       DEFAULTS_CITY_CODE: "std:080"
+      DEFAULTS_SUBSCRIBER_ID: "ev-charging.sandbox1.com"
     networks:
-      - onix-network
+    - onix-network
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -219,14 +218,15 @@ services:
       # Config file path
       CONFIG_FILE: /app/config/config.yaml
       # RabbitMQ configuration from config.yaml
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       RABBITMQ_EXCHANGE: beckn_exchange
-      RABBITMQ_USERNAME: admin
-      RABBITMQ_PASSWORD: admin
-      # Defaults configuration from config.yaml
-      DEFAULTS_VERSION: "1.0.0"
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      # Defaults configuration from config.yaml (should match config file)
+      DEFAULTS_VERSION: "2.0.0"
       DEFAULTS_COUNTRY_CODE: "IND"
       DEFAULTS_CITY_CODE: "std:080"
+      DEFAULTS_SUBSCRIBER_ID: "ev-charging.sandbox2.com"
     networks:
       - onix-network
     depends_on:

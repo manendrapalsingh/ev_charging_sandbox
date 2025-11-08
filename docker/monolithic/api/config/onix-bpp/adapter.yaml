@@ -21,9 +21,9 @@ pluginManager:
   root: /app/plugins
 
 modules:
-  # BPP Receiver - Receives search from CDS and other requests from ONIX
-  # Phase 1: Receives search from CDS
-  # Phase 2+: Receives other requests (select, init, confirm, etc.) from ONIX
+  # BPP Receiver - Receives requests via HTTP and publishes to RabbitMQ
+  # Phase 1: Receives discover from CDS (HTTP) -> publishes to RabbitMQ -> mock-bpp-rabbitmq (consumer)
+  # Phase 2+: Receives other requests (select, init, confirm, etc.) from BAP-ONIX (HTTP) -> publishes to RabbitMQ -> mock-bpp-rabbitmq (consumer)
   - name: bppTxnReceiver
     path: /bpp/receiver/
     handler:
@@ -65,6 +65,14 @@ modules:
           id: router
           config:
             routingConfig: /app/config/onix-bpp/bpp_receiver_routing.yaml
+        publisher:
+          id: publisher
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            durable: "true"
+            username: guest
+            password: guest
         middleware:
           - id: reqpreprocessor
             config:
@@ -75,14 +83,15 @@ modules:
         - addRoute
         - validateSchema
 
-  # BPP Caller - Sends responses (on_search, on_select, on_init, etc.) to CDS/ONIX
-  # Phase 1: Sends on_search response to CDS
-  # Phase 2+: Sends other responses to ONIX
+  # BPP Caller - Consumes responses from RabbitMQ and sends HTTP
+  # Phase 1: Consumes on_discover from RabbitMQ (mock-bpp-rabbitmq producer) -> sends HTTP to mock-cds
+  # Phase 2+: Consumes other responses (on_select, on_init, etc.) from RabbitMQ (mock-bpp-rabbitmq producer) -> sends HTTP to BAP-ONIX plugin -> publishes to RabbitMQ -> mock-bap-rabbitmq (consumer)
   - name: bppTxnCaller
-    path: /bpp/caller/
+    path: ""  # path is not used for queue handlers
     handler:
-      type: std
+      type: queue
       role: bpp
+      subscriberId: ev-charging.sandbox2.com
       httpClientConfig:
         maxIdleConns: 1000
         maxIdleConnsPerHost: 200
@@ -113,10 +122,41 @@ modules:
           id: schemavalidator
           config:
             schemaDir: /app/schemas
+        queueHandler:
+          id: queuehandler
+          config:
+            subscriberId: ev-charging.sandbox2.com
+            role: bpp
+            consumerType: rabbitmq
+            consumerThreads: "2"
+            consumer.id: rabbitmqconsumer
+            consumer.addr: rabbitmq:5672
+            consumer.exchange: beckn_exchange
+            # Routing keys for callbacks from BPP Backend (bpp.on_discover, bpp.on_select, etc.)
+            consumer.routingKeys: "bpp.on_discover,bpp.on_select,bpp.on_init,bpp.on_confirm,bpp.on_status,bpp.on_track,bpp.on_cancel,bpp.on_update,bpp.on_rating,bpp.on_support"
+            consumer.queueName: "bpp_caller_queue"
+            consumer.durable: "true"
+            consumer.autoDelete: "false"
+            consumer.exclusive: "false"
+            consumer.noWait: "false"
+            consumer.autoAck: "false"
+            consumer.prefetchCount: "10"
+            consumer.queueArgs: ""
+            consumer.username: guest
+            consumer.password: guest
+            steps: '["addRoute", "validateSchema", "sign"]'
         router:
           id: router
           config:
             routingConfig: /app/config/onix-bpp/bpp_caller_routing.yaml
+        publisher:
+          id: publisher
+          config:
+            addr: rabbitmq:5672
+            exchange: beckn_exchange
+            durable: "true"
+            username: guest
+            password: guest
         signer:
           id: signer
         middleware:
@@ -136,6 +176,9 @@ plugins:
   - schemavalidator
   - signvalidator
   - router
+  - publisher
+  - rabbitmqconsumer
+  - queuehandler
   - signer
   - reqpreprocessor
 

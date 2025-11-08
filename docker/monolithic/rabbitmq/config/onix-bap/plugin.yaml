@@ -4,8 +4,9 @@ plugins:
   - cache
   - schemavalidator
   - signvalidator
-  - consumer
   - router
   - publisher
+  - rabbitmqconsumer
+  - queuehandler
   - signer
   - reqpreprocessor

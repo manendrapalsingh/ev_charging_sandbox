@@ -1,95 +1,84 @@
-# ONIX BPP Receiver Routing Configuration
-
-# Supports Phase 1 (Discover from CDS) and Phase 2+ (Direct from BAP-ONIX)
-
-
-
-# Phase 1: Discover requests from CDS (after aggregation)
-
-# Phase 2+: Other requests directly from BAP-ONIX (NO CDS involvement)
-
-# All routes to backend service
-
-
+# BPP Receiver Routing Configuration
+# Phase 1: Receives discover requests from CDS (HTTP) -> publishes to RabbitMQ -> mock-bpp-rabbitmq (consumer)
+# Phase 2+: Receives other requests (select, init, confirm, etc.) from BAP-ONIX (HTTP) -> publishes to RabbitMQ -> mock-bpp-rabbitmq (consumer)
 
 routingRules:
-
-  # Phase 1: Discover request from CDS to BPP app via RabbitMQ
-  - domain: ev_charging_network
-    version: "1.0.0"
+  # Phase 1: Discover request from CDS -> publish to RabbitMQ -> mock-bpp-rabbitmq (consumer)
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.discover
     endpoints:
       - discover
 
-  # Phase 2+: Other requests from BAP-ONIX to BPP app via RabbitMQ
-  - domain: ev_charging_network
-    version: "1.0.0"
+  # Phase 2+: Other requests from BAP-ONIX (HTTP) -> publish to RabbitMQ -> mock-bpp-rabbitmq (consumer)
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.select
     endpoints:
       - select
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.init
     endpoints:
       - init
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.confirm
     endpoints:
       - confirm
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.status
     endpoints:
       - status
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.track
     endpoints:
       - track
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.cancel
     endpoints:
       - cancel
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.update
     endpoints:
       - update
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.rating
     endpoints:
       - rating
 
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: publisher
     target:
       publisherId: bpp.support

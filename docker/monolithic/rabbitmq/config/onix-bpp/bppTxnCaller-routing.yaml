@@ -5,8 +5,8 @@
 
 routingRules:
   # Phase 1: on_discover response to CDS via HTTP (network communication)
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: url
     target:
       url: http://mock-cds:8082/csd
@@ -16,8 +16,8 @@ routingRules:
 
   # Phase 2+: Other responses to BAP plugin via HTTP (network communication)
   # BAP plugin will then forward to BAP app via RabbitMQ
-  - domain: ev_charging_network
-    version: "1.0.0"
+  - domain: beckn.one:deg:ev-charging
+    version: "2.0.0"
     targetType: bap
     target: {}
     endpoints:

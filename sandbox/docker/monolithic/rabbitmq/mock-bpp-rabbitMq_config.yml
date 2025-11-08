@@ -4,7 +4,7 @@
 
 rabbitmq:
   # RabbitMQ connection URL
-  url: "amqp://admin:admin@rabbitmq:5672/"
+  url: "amqp://guest:guest@rabbitmq:5672/"
   # Exchange name for message routing
   exchange: "beckn_exchange"
 
@@ -15,9 +15,11 @@ server:
 
 defaults:
   # Beckn protocol version
-  version: "1.0.0"
+  version: "2.0.0"
   # Country code (ISO 3166-1 alpha-3)
   country_code: "IND"
   # City code (Beckn city code format)
   city_code: "std:080"
+  # Subscriber ID for BPP (must match registry)
+  subscriber_id: "ev-charging.sandbox2.com"
 

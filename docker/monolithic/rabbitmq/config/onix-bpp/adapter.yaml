@@ -9,6 +9,8 @@ log:
     - subscriber_id
     - module_id
 
+# HTTP configuration is required for bppTxnReceiver to receive HTTP requests from BAP-ONIX plugin
+# The bppTxnReceiver module uses handler type "std" which requires HTTP server
 http:
   port: 8002
   timeout:
@@ -16,22 +18,20 @@ http:
     write: 30
     idle: 30
 
-# Note: HTTP port exposed for bppTxnReceiver endpoint (/bpp/receiver/)
-# bppTxnReceiver: HTTP handler that receives requests from BAP adapter and publishes to RabbitMQ
-# bppTxnCaller: Queue consumer that consumes callbacks from BPP Backend and routes via HTTP
-
 pluginManager:
   root: /app/plugins
 
 modules:
-  # BPP Receiver - HTTP handler that receives requests from BAP adapter and publishes to BPP Backend via RabbitMQ
-  # Phase 1: Receives discover requests from BAP adapter, publishes to BPP Backend
-  # Phase 2+: Receives requests directly from BAP adapter (select, init, confirm, etc.), publishes to BPP Backend
+  # BPP Receiver - Receives HTTP requests from BAP-ONIX and publishes to BPP Backend
+  # Phase 1: Receives discover from CDS
+  # Phase 2+: Receives other requests (select, init, confirm, etc.) from BAP-ONIX
+  # Publishes messages to BPP Backend via RabbitMQ
   - name: bppTxnReceiver
     path: /bpp/receiver/
     handler:
       type: std
       role: bpp
+      subscriberId: ev-charging.sandbox2.com
       httpClientConfig:
         maxIdleConns: 1000
         maxIdleConnsPerHost: 200
@@ -48,7 +48,7 @@ modules:
         keyManager:
           id: simplekeymanager
           config:
-            networkParticipant: example-bpp.com
+            networkParticipant: ev-charging.sandbox2.com
             keyId: bpp-key-1
             signingPrivateKey: HH3KyEg4KhS8jVxPtEHMr6FTqyL0ef100vSPoZ2U0x4=
             signingPublicKey: 2ja8jS4O/HhyfnTzgC81mXkNNAueeqGEhv42FJtoUv8=
@@ -74,6 +74,8 @@ modules:
             addr: rabbitmq:5672
             exchange: beckn_exchange
             durable: "true"
+            username: guest
+            password: guest
         middleware:
           - id: reqpreprocessor
             config:
@@ -84,14 +86,15 @@ modules:
         - validateSchema
         - addRoute
 
-  # BPP Caller - Queue consumer that consumes callbacks from BPP Backend and routes them to BAP/CDS via HTTP
-  # Phase 1: Consumes on_discover callbacks, routes to CDS for aggregation
-  # Phase 2+: Consumes callbacks (on_select, on_init, on_confirm, etc.), routes to BAP adapter
+  # BPP Caller - Consumes callbacks from BPP Backend via RabbitMQ
+  # Phase 1: Routes on_discover response to CDS
+  # Phase 2+: Routes other responses to BAP-ONIX
   - name: bppTxnCaller
-    path: /bpp/caller/
+    path: ""  # path is not used for queue handlers
     handler:
-      type: std
+      type: queue
       role: bpp
+      subscriberId: ev-charging.sandbox2.com
       httpClientConfig:
         maxIdleConns: 1000
         maxIdleConnsPerHost: 200
@@ -108,7 +111,7 @@ modules:
         keyManager:
           id: simplekeymanager
           config:
-            networkParticipant: example-bpp.com
+            networkParticipant: ev-charging.sandbox2.com
             keyId: bpp-key-1
             signingPrivateKey: HH3KyEg4KhS8jVxPtEHMr6FTqyL0ef100vSPoZ2U0x4=
             signingPublicKey: 2ja8jS4O/HhyfnTzgC81mXkNNAueeqGEhv42FJtoUv8=
@@ -122,31 +125,29 @@ modules:
           id: schemavalidator
           config:
             schemaDir: /app/schemas
-        consumer:
-          id: consumer
+        queueHandler:
+          id: queuehandler
           config:
-            addr: rabbitmq:5672
-            exchange: beckn_exchange
-            queue: bpp_caller_queue
-            routingKeys:
-              - bpp.on_discover
-              - bpp.on_select
-              - bpp.on_init
-              - bpp.on_confirm
-              - bpp.on_status
-              - bpp.on_track
-              - bpp.on_cancel
-              - bpp.on_update
-              - bpp.on_rating
-              - bpp.on_support
-            durable: "true"
-            autoDelete: "false"
-            exclusive: "false"
-            noWait: "false"
-            queueArgs: ""
-            autoAck: "false"
-            prefetchCount: 10
-            consumerThreads: 2
+            subscriberId: ev-charging.sandbox2.com
+            role: bpp
+            consumerType: rabbitmq
+            consumerThreads: "2"
+            consumer.id: rabbitmqconsumer
+            consumer.addr: rabbitmq:5672
+            consumer.exchange: beckn_exchange
+            # Routing keys for callbacks from BPP Backend (bpp.on_discover, bpp.on_select, etc.)
+            consumer.routingKeys: "bpp.on_discover,bpp.on_select,bpp.on_init,bpp.on_confirm,bpp.on_status,bpp.on_track,bpp.on_cancel,bpp.on_update,bpp.on_rating,bpp.on_support"
+            consumer.queueName: "bpp_caller_queue"
+            consumer.durable: "true"
+            consumer.autoDelete: "false"
+            consumer.exclusive: "false"
+            consumer.noWait: "false"
+            consumer.autoAck: "false"
+            consumer.prefetchCount: "10"
+            consumer.queueArgs: ""
+            consumer.username: guest
+            consumer.password: guest
+            steps: '["addRoute", "validateSchema", "sign"]'
         router:
           id: router
           config:
@@ -157,6 +158,8 @@ modules:
             addr: rabbitmq:5672
             exchange: beckn_exchange
             durable: "true"
+            username: guest
+            password: guest
         signer:
           id: signer
         middleware:

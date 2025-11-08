@@ -23,7 +23,7 @@ ACTION=${1:-all}
 
 # Function to get routing key from action
 # These messages act like BAP Backend producer publishing requests
-# BAP Backend publishes to bap.* routing keys (requests consumed by bapTxnCaller)
+# BAP Backend publishes to bap.* routing keys (requests from BAP Backend)
 # The BAP plugin's bapTxnCaller consumes from bap_caller_queue bound to bap.* routing keys
 get_routing_key() {
   local action=$1
@@ -31,7 +31,7 @@ get_routing_key() {
     discover)
       echo "bap.discover"
       ;;
-    select|init|confirm|update|track|cancel|rating|support)
+    select|init|confirm|status|track|cancel|update|rating|support)
       echo "bap.${action}"
       ;;
     *)

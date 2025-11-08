@@ -247,6 +247,106 @@ docker-compose -f docker-compose-onix-bap-plugin.yml -f docker-compose-onix-bpp-
    docker-compose -f docker-compose-onix-bap-plugin.yml logs redis-onix-bap
    ```
 
+## Example API Requests
+
+### BAP - Discover Request
+
+```bash
+# Send a discover request from BAP
+curl -X POST http://localhost:8001/bap/caller/discover \
+  -H "Content-Type: application/json" \
+  -d '{
+    "context": {
+      "domain": "ev_charging_network",
+      "version": "1.0.0",
+      "action": "discover",
+      "bap_id": "example-bap.com",
+      "bap_uri": "http://your-bap-backend:9001",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+      "message_id": "550e8400-e29b-41d4-a716-446655440001",
+      "timestamp": "2023-06-15T09:30:00.000Z",
+      "ttl": "PT30S"
+    },
+    "message": {
+      "intent": {
+        "fulfillment": {
+          "start": {
+            "location": {
+              "gps": "12.9715987,77.5945627"
+            }
+          },
+          "end": {
+            "location": {
+              "gps": "12.9715987,77.5945627"
+            }
+          }
+        }
+      }
+    }
+  }'
+```
+
+### BAP - Select Request
+
+```bash
+# Send a select request
+curl -X POST http://localhost:8001/bap/caller/select \
+  -H "Content-Type: application/json" \
+  -d '{
+    "context": {
+      "domain": "ev_charging_network",
+      "version": "1.0.0",
+      "action": "select",
+      "bap_id": "example-bap.com",
+      "bap_uri": "http://your-bap-backend:9001",
+      "bpp_id": "example-bpp.com",
+      "bpp_uri": "http://your-bpp-backend:9002",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+      "message_id": "550e8400-e29b-41d4-a716-446655440002",
+      "timestamp": "2023-06-15T09:30:00.000Z",
+      "ttl": "PT30S"
+    },
+    "message": {
+      "order": {
+        "items": [
+          {
+            "id": "charging-station-1"
+          }
+        ]
+      }
+    }
+  }'
+```
+
+**Note**: 
+- Replace `your-bap-backend` and `your-bpp-backend` with your actual backend service hostnames
+- The request will be automatically routed to CDS (for discover) or BPP (for other actions) based on the routing configuration
+- Callbacks will be sent to the `bap_uri` specified in the context
+
+## Health Checks
+
+### Check Service Health
+
+```bash
+# Check if BAP adapter is running
+curl http://localhost:8001/health
+
+# Check if BPP adapter is running
+curl http://localhost:8002/health
+```
+
+### Verify Redis Connection
+
+```bash
+# Test BAP Redis connection
+docker exec redis-onix-bap redis-cli ping
+# Should return: PONG
+
+# Test BPP Redis connection
+docker exec redis-onix-bpp redis-cli ping
+# Should return: PONG
+```
+
 ## Customization
 
 ### Changing Ports

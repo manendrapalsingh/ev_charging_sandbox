@@ -244,25 +244,25 @@ Phase 2+: Direct BPP Communication
 
 #### 1.1 Monolithic Architecture
 - **[1.1.1 API Integration](./docker/monolithic/api/README.md)** ✅ **Ready** - Standalone ONIX adapters
-- [1.1.2 RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)
-- [1.1.3 Kafka Integration](./docker/monolithic/kafka/README.md)
+- **[1.1.2 RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)** ✅ **Ready** - Message queue-based integration
+- **[1.1.3 Kafka Integration](./docker/monolithic/kafka/README.md)** ✅ **Ready** - Event streaming integration
 
 #### 1.2 Microservice Architecture
 - **[1.2.1 API Integration](./docker/microservice/api/README.md)** ✅ **Ready** - Standalone ONIX adapters with endpoint-based routing
-- [1.2.2 RabbitMQ Integration](./docker/microservice/rabbitmq/README.md)
-- [1.2.3 Kafka Integration](./docker/microservice/kafka/README.md)
+- **[1.2.2 RabbitMQ Integration](./docker/microservice/rabbitmq/README.md)** ✅ **Ready** - Message queue-based integration
+- **[1.2.3 Kafka Integration](./docker/microservice/kafka/README.md)** ✅ **Ready** - Event streaming integration
 
 ### 2. Helm Chart Integration
 
 #### 2.1 Monolithic Architecture
-- [2.1.1 API Integration](./helm/monolithic/api/README.md)
-- [2.1.2 RabbitMQ Integration](./helm/monolithic/rabbitmq/README.md)
-- [2.1.3 Kafka Integration](./helm/monolithic/kafka/README.md)
+- **[2.1.1 API Integration](./helm/monolithic/api/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
+- [2.1.2 RabbitMQ Integration](./helm/monolithic/rabbitmq/README.md) - Coming soon
+- [2.1.3 Kafka Integration](./helm/monolithic/kafka/README.md) - Coming soon
 
 #### 2.2 Microservice Architecture
-- [2.2.1 API Integration](./helm/microservice/api/README.md)
-- [2.2.2 RabbitMQ Integration](./helm/microservice/rabbitmq/README.md)
-- [2.2.3 Kafka Integration](./helm/microservice/kafka/README.md)
+- **[2.2.1 API Integration](./helm/microservice/api/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
+- [2.2.2 RabbitMQ Integration](./helm/microservice/rabbitmq/README.md) - Coming soon
+- [2.2.3 Kafka Integration](./helm/microservice/kafka/README.md) - Coming soon
 
 ---
 
@@ -536,10 +536,18 @@ curl -X POST http://localhost:8001/bap/caller/discover \
 - **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP, BPP, CDS, Registry)
 
 #### ONIX Adapter Integration
+
+**Docker Integration:**
 - **[Monolithic API Integration](./docker/monolithic/api/README.md)**: ✅ Complete guide for standalone Docker-based ONIX adapter deployment
 - **[Microservice API Integration](./docker/microservice/api/README.md)**: ✅ Complete guide for microservice architecture with endpoint-based routing
-- **[RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)**: Message queue-based integration (coming soon)
-- **[Kafka Integration](./docker/monolithic/kafka/README.md)**: Event streaming integration (coming soon)
+- **[Monolithic RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)**: ✅ Complete guide for RabbitMQ message queue-based integration
+- **[Microservice RabbitMQ Integration](./docker/microservice/rabbitmq/README.md)**: ✅ Complete guide for microservice RabbitMQ integration
+- **[Monolithic Kafka Integration](./docker/monolithic/kafka/README.md)**: ✅ Complete guide for Apache Kafka event streaming integration
+- **[Microservice Kafka Integration](./docker/microservice/kafka/README.md)**: ✅ Complete guide for microservice Kafka integration
+
+**Helm Chart Integration:**
+- **[Monolithic API Integration](./helm/monolithic/api/README.md)**: ✅ Complete guide for Kubernetes deployment with Helm charts
+- **[Microservice API Integration](./helm/microservice/api/README.md)**: ✅ Complete guide for microservice Kubernetes deployment
 
 ### Related Documentation
 

@@ -18,7 +18,7 @@ This setup creates a fully functional sandbox environment for testing and develo
 1. **rabbitmq** (Ports: 5672 AMQP, 15672 Management UI)
    - RabbitMQ message broker for asynchronous communication
    - Used for message routing between adapters and mock services
-   - Management UI available at `http://localhost:15672` (admin/admin)
+   - Management UI available at `http://localhost:15672` (guest/guest)
 
 2. **redis-bap** (Port: 6379)
    - Redis cache for the BAP adapter
@@ -67,7 +67,7 @@ This setup creates a fully functional sandbox environment for testing and develo
 9. **mock-bpp-rabbit-mq** (Internal Port: 9004)
    - Mock BPP backend service with RabbitMQ integration
    - Simulates a Buyer Platform Provider application
-   - Consumes messages from RabbitMQ queues (routing keys: `bpp.discover`, `bpp.select`, etc.)
+   - Consumes messages from RabbitMQ queues (routing keys: `bpp.discover`, `bpp.select`, etc.) - Note: These are published by BPP Plugin, not BAP Backend
    - Publishes responses to RabbitMQ for ONIX adapter processing
    - **Note**: Runs in queue-only mode - no external HTTP ports exposed
 
@@ -150,8 +150,8 @@ Each service has its own configuration file with a service name prefix. This sec
   - Phase 1: `on_discover` → Routes to CDS via HTTP (`http://mock-cds:8082/csd`) for aggregation
   - Phase 2+: Other responses (`on_select`, `on_init`, `on_confirm`, etc.) → Routes directly to BAP adapter via HTTP
 - **`bppTxnReciever-routing.yaml`**: Defines routing rules for requests received from BAP adapter:
-  - Phase 1: `discover` → Routes to RabbitMQ publisher with routing key `bpp.discover`
-  - Phase 2+: Other requests (`select`, `init`, `confirm`, etc.) → Routes to RabbitMQ publisher with routing keys like `bpp.select`, `bpp.init`, etc.
+  - Phase 1: `discover` → Routes to RabbitMQ publisher with routing key `bpp.discover` (published by BPP Plugin to BPP Backend)
+  - Phase 2+: Other requests (`select`, `init`, `confirm`, etc.) → Routes to RabbitMQ publisher with routing keys like `bpp.select`, `bpp.init`, etc. (published by BPP Plugin to BPP Backend)
 
 **Note**: The adapter exposes HTTP port 8002 for `bppTxnReceiver` endpoint. `bppTxnCaller` consumes callbacks from RabbitMQ queues.
 
@@ -228,7 +228,7 @@ Each service has its own configuration file with a service name prefix. This sec
 
 **Key Sections**:
 - **`rabbitmq`**: RabbitMQ connection configuration:
-  - `url`: RabbitMQ connection URL (`amqp://admin:admin@rabbitmq:5672/`)
+  - `url`: RabbitMQ connection URL (`amqp://guest:guest@rabbitmq:5672/`)
   - `exchange`: Exchange name for message routing (`beckn_exchange`)
 - **`server.port`**: Internal server port (9003) - used for health checks only
 - **`defaults`**: Default values:
@@ -250,7 +250,7 @@ Each service has its own configuration file with a service name prefix. This sec
 
 **Key Sections**:
 - **`rabbitmq`**: RabbitMQ connection configuration:
-  - `url`: RabbitMQ connection URL (`amqp://admin:admin@rabbitmq:5672/`)
+  - `url`: RabbitMQ connection URL (`amqp://guest:guest@rabbitmq:5672/`)
   - `exchange`: Exchange name for message routing (`beckn_exchange`)
 - **`server.port`**: Internal server port (9004) - used for health checks only
 - **`defaults`**: Default values:
@@ -402,7 +402,7 @@ docker-compose logs -f mock-bap-rabbit-mq
 docker-compose ps
 
 # Check RabbitMQ management UI
-# Open http://localhost:15672 (admin/admin)
+# Open http://localhost:15672 (guest/guest)
 ```
 
 ### Stopping Services
@@ -424,7 +424,7 @@ Once all services are running, you can access:
 
 | Service | Endpoint | Description |
 |---------|----------|-------------|
-| **RabbitMQ Management** | `http://localhost:15672` | RabbitMQ Management UI (admin/admin) |
+| **RabbitMQ Management** | `http://localhost:15672` | RabbitMQ Management UI (guest/guest) |
 | **Mock Registry** | `http://localhost:3030` | Registry service |
 | | `http://localhost:3030/lookup` | Lookup subscribers |
 | **Mock CDS** | `http://localhost:8082` | Catalog Discovery Service |
@@ -441,7 +441,7 @@ Once all services are running, you can access:
 1. **BAP Application** → Publishes `discover` request to RabbitMQ with routing key
 2. **ONIX BAP Plugin** → Consumes message, routes to **Mock CDS** via HTTP
 3. **Mock CDS** → Broadcasts discover to all registered BPPs
-4. **ONIX BPP Plugin** → Receives discover from CDS, publishes to RabbitMQ with routing key `bpp.discover`
+4. **ONIX BPP Plugin** → Receives discover from CDS, publishes to RabbitMQ with routing key `bpp.discover` (to BPP Backend)
 5. **Mock BPP RabbitMQ** → Consumes `bpp.discover`, processes, publishes `on_discover` response
 6. **ONIX BPP Plugin** → Routes `on_discover` response to **Mock CDS** via HTTP
 7. **Mock CDS** → Aggregates responses, sends to **ONIX BAP Plugin**
@@ -452,7 +452,7 @@ Once all services are running, you can access:
 
 1. **BAP Application** → Publishes `select/init/confirm` request to RabbitMQ
 2. **ONIX BAP Plugin** → Consumes message, routes directly to **ONIX BPP Plugin** (bypasses CDS)
-3. **ONIX BPP Plugin** → Publishes to RabbitMQ with routing key `bpp.select/bpp.init/bpp.confirm`
+3. **ONIX BPP Plugin** → Publishes to RabbitMQ with routing key `bpp.select/bpp.init/bpp.confirm` (to BPP Backend)
 4. **Mock BPP RabbitMQ** → Consumes request, processes, publishes response
 5. **ONIX BPP Plugin** → Routes callback to **ONIX BAP Plugin**
 6. **ONIX BAP Plugin** → Publishes callback to RabbitMQ with routing key `bap.on_select/bap.on_init/bap.on_confirm`
@@ -493,8 +493,8 @@ All services run on shared Docker networks allowing:
 ### BPP Queues and Routing Keys
 - **Queue**: `bpp_receiver_queue`
 - **Routing Keys**:
-  - `bpp.discover`
-  - `bpp.select`
+  - `bpp.discover` (published by BPP Plugin to BPP Backend)
+  - `bpp.select` (published by BPP Plugin to BPP Backend)
   - `bpp.init`
   - `bpp.confirm`
   - `bpp.status`
@@ -518,8 +518,8 @@ The RabbitMQ Management Plugin is enabled by default and provides a web-based UI
 
 2. **Open the Management UI**:
    - URL: `http://localhost:15672`
-   - Username: `admin`
-   - Password: `admin`
+   - Username: `guest`
+   - Password: `guest`
 
 ### Key Features for Testing Consumer Behavior
 
@@ -580,7 +580,7 @@ The RabbitMQ Management Plugin is enabled by default and provides a web-based UI
 #### 6. **Publish/Get Messages** - Test Message Publishing
    - **Location**: Go to "Exchanges" → Click on `beckn_exchange` → Scroll to "Publish message"
    - **How to Test**:
-     1. Select routing key (e.g., `bpp.discover`, `bpp.select`, etc.)
+     1. Select routing key (e.g., `bap.discover`, `bap.select`, etc. for BAP Backend or `bpp.discover`, `bpp.select`, etc. for BPP Plugin → BPP Backend)
      2. Enter message payload (JSON format)
      3. Click "Publish message"
      4. Monitor the target queue to see if the message appears
@@ -591,7 +591,7 @@ The RabbitMQ Management Plugin is enabled by default and provides a web-based UI
    - See [Test Messages Documentation](message/bap/README.md) for detailed usage instructions
    - Messages include all BAP APIs: discover (8 variants), select, init, confirm, update, track, cancel, rating, support
 
-   **Example Test Message** (for `bpp.discover`):
+   **Example Test Message** (for `bap.discover` from BAP Backend):
    ```json
    {
      "context": {
@@ -661,7 +661,7 @@ The RabbitMQ Management Plugin is enabled by default and provides a web-based UI
 4. Watch **"Ready"** decrease as consumer resumes processing
 
 #### Test 5: Monitor Message Flow End-to-End
-1. **Publish** message to `bpp.discover` routing key
+1. **Publish** message to `bap.discover` routing key (from BAP Backend)
 2. Monitor `bpp_receiver_queue` - message should appear
 3. Mock BPP should consume and process
 4. Mock BPP publishes response to `bap.on_discover`

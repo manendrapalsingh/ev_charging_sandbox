@@ -19,7 +19,7 @@ endpoints:
     - host: "onix-bpp-plugin-rabbitmq"
       port: "8002"
       discover_path: "/bpp/receiver/discover"
-      subscriber_id: "onix-bpp"
+      subscriber_id: "ev-charging.sandbox2.com"
     # Add more BPPs here as needed
     # - host: "another-onix-bpp-plugin-rabbitmq"
     #   port: "8002"

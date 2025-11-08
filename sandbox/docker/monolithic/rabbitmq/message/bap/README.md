@@ -1,6 +1,6 @@
 # BAP RabbitMQ Test Messages
 
-This directory contains pre-formatted JSON messages and bash scripts for testing BAP (Buyer App Provider) APIs via RabbitMQ. These scripts act like **BAP Backend**, publishing requests to `bpp.*` routing keys (e.g., `bpp.discover`, `bpp.select`, etc.) that will be consumed by the **BAP plugin's `bapTxnCaller` module** from `bap_caller_queue`. You can use these messages directly in the RabbitMQ Management UI or via command-line scripts.
+This directory contains pre-formatted JSON messages and bash scripts for testing BAP (Buyer App Provider) APIs via RabbitMQ. These scripts act like **BAP Backend**, publishing requests to `bap.*` routing keys (e.g., `bap.discover`, `bap.select`, etc.) that will be consumed by the **BAP plugin's `bapTxnCaller` module** from `bap_caller_queue`. You can use these messages directly in the RabbitMQ Management UI or via command-line scripts.
 
 ## Quick Reference
 
@@ -67,7 +67,7 @@ cd sandbox/docker/monolithic/rabbitmq/message/bap/test && ./publish-support.sh
 **How `publish-all.sh` works:**
 - ✅ Automatically finds all JSON files in `../example/` directory
 - ✅ Extracts action from `context.action` field in each JSON
-- ✅ Determines routing key automatically (e.g., `discover` → `bpp.discover`)
+- ✅ Determines routing key automatically (e.g., `discover` → `bap.discover`)
 - ✅ Generates unique transaction IDs and message IDs
 - ✅ Updates timestamps to current time
 - ✅ Publishes each message to RabbitMQ
@@ -164,8 +164,8 @@ message/bap/
 
 1. **Access RabbitMQ Management UI**:
    - URL: `http://localhost:15672`
-   - Username: `admin`
-   - Password: `admin`
+   - Username: `guest`
+   - Password: `guest`
 
 2. **Navigate to Exchanges**:
    - Click "Exchanges" in the top navigation
@@ -182,7 +182,7 @@ message/bap/
 
 6. **Monitor the queue**:
    - Go to "Queues" tab
-   - Click on the target queue (e.g., `bpp.discover`, `bpp.select`, etc.)
+   - Click on the target queue (e.g., `bap.discover`, `bap.select`, etc.)
    - Watch the message appear and get consumed
 
 **Note**: When copying JSON from files, remember to update `transaction_id`, `message_id`, and `timestamp` fields with unique values, or use the bash scripts which do this automatically.
@@ -201,22 +201,22 @@ Individual scripts for publishing specific messages (located in `test/` director
 
 | Script | Description | Routing Key |
 |--------|-------------|-------------|
-| `publish-discover-along-a-route.sh` | Discover charging stations along a route | `bpp.discover` |
-| `publish-discover-by-evse.sh` | Discover by EVSE ID | `bpp.discover` |
-| `publish-discover-by-cpo.sh` | Discover by CPO (Charge Point Operator) | `bpp.discover` |
-| `publish-discover-by-station.sh` | Discover by station ID | `bpp.discover` |
-| `publish-discover-within-boundary.sh` | Discover within geographic boundary | `bpp.discover` |
-| `publish-discover-within-timerange.sh` | Discover within time range | `bpp.discover` |
-| `publish-discover-connector-spec.sh` | Discover by connector specifications | `bpp.discover` |
-| `publish-discover-vehicle-spec.sh` | Discover by vehicle specifications | `bpp.discover` |
-| `publish-select.sh` | Select a charging offer | `bpp.select` |
-| `publish-init.sh` | Initialize an order | `bpp.init` |
-| `publish-confirm.sh` | Confirm an order | `bpp.confirm` |
-| `publish-update.sh` | Update an order status | `bpp.update` |
-| `publish-track.sh` | Track an order | `bpp.track` |
-| `publish-cancel.sh` | Cancel an order | `bpp.cancel` |
-| `publish-rating.sh` | Submit a rating | `bpp.rating` |
-| `publish-support.sh` | Request support | `bpp.support` |
+| `publish-discover-along-a-route.sh` | Discover charging stations along a route | `bap.discover` |
+| `publish-discover-by-evse.sh` | Discover by EVSE ID | `bap.discover` |
+| `publish-discover-by-cpo.sh` | Discover by CPO (Charge Point Operator) | `bap.discover` |
+| `publish-discover-by-station.sh` | Discover by station ID | `bap.discover` |
+| `publish-discover-within-boundary.sh` | Discover within geographic boundary | `bap.discover` |
+| `publish-discover-within-timerange.sh` | Discover within time range | `bap.discover` |
+| `publish-discover-connector-spec.sh` | Discover by connector specifications | `bap.discover` |
+| `publish-discover-vehicle-spec.sh` | Discover by vehicle specifications | `bap.discover` |
+| `publish-select.sh` | Select a charging offer | `bap.select` |
+| `publish-init.sh` | Initialize an order | `bap.init` |
+| `publish-confirm.sh` | Confirm an order | `bap.confirm` |
+| `publish-update.sh` | Update an order status | `bap.update` |
+| `publish-track.sh` | Track an order | `bap.track` |
+| `publish-cancel.sh` | Cancel an order | `bap.cancel` |
+| `publish-rating.sh` | Submit a rating | `bap.rating` |
+| `publish-support.sh` | Request support | `bap.support` |
 
 **Note**: The `publish-all.sh` script automatically discovers and publishes all JSON files from the `example/` directory, so you don't need to run individual scripts unless you want to test a specific message.
 
@@ -226,32 +226,32 @@ All JSON message files are located in the `example/` directory. The `publish-all
 
 | Message File (in `example/`) | Action | Routing Key | Target Queue | Description |
 |-------------------------------|-------|-------------|--------------|-------------|
-| `discover-along-a-route.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover charging stations along a route |
-| `discover-by-evse.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover by EVSE ID |
-| `discover-by-cpo.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover by CPO (Charge Point Operator) |
-| `discover-by-station.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover by station ID |
-| `discover-within-boundary.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover within geographic boundary |
-| `discover-within-timerange.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover within time range |
-| `discover-connector-spec.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover by connector specifications |
-| `discover-vehicle-spec.json` | `discover` | `bpp.discover` | `bap_caller_queue` | Discover by vehicle specifications |
-| `select.json` | `select` | `bpp.select` | `bap_caller_queue` | Select a charging offer |
-| `init.json` | `init` | `bpp.init` | `bap_caller_queue` | Initialize an order |
-| `confirm.json` | `confirm` | `bpp.confirm` | `bap_caller_queue` | Confirm an order |
-| `update.json` | `update` | `bpp.update` | `bap_caller_queue` | Update an order status |
-| `track.json` | `track` | `bpp.track` | `bap_caller_queue` | Track an order |
-| `cancel.json` | `cancel` | `bpp.cancel` | `bap_caller_queue` | Cancel an order |
-| `rating.json` | `rating` | `bpp.rating` | `bap_caller_queue` | Submit a rating |
-| `support.json` | `support` | `bpp.support` | `bap_caller_queue` | Request support |
+| `discover-along-a-route.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover charging stations along a route |
+| `discover-by-evse.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover by EVSE ID |
+| `discover-by-cpo.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover by CPO (Charge Point Operator) |
+| `discover-by-station.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover by station ID |
+| `discover-within-boundary.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover within geographic boundary |
+| `discover-within-timerange.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover within time range |
+| `discover-connector-spec.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover by connector specifications |
+| `discover-vehicle-spec.json` | `discover` | `bap.discover` | `bap_caller_queue` | Discover by vehicle specifications |
+| `select.json` | `select` | `bap.select` | `bap_caller_queue` | Select a charging offer |
+| `init.json` | `init` | `bap.init` | `bap_caller_queue` | Initialize an order |
+| `confirm.json` | `confirm` | `bap.confirm` | `bap_caller_queue` | Confirm an order |
+| `update.json` | `update` | `bap.update` | `bap_caller_queue` | Update an order status |
+| `track.json` | `track` | `bap.track` | `bap_caller_queue` | Track an order |
+| `cancel.json` | `cancel` | `bap.cancel` | `bap_caller_queue` | Cancel an order |
+| `rating.json` | `rating` | `bap.rating` | `bap_caller_queue` | Submit a rating |
+| `support.json` | `support` | `bap.support` | `bap_caller_queue` | Request support |
 
-**Note**: These messages act like BAP Backend publishing requests to BPP. The BAP Backend publishes to `bpp.*` routing keys (requests going to BPP), and the BAP plugin's `bapTxnCaller` module consumes from `bap_caller_queue` which is bound to these `bpp.*` routing keys.
+**Note**: These messages act like BAP Backend publishing requests. The BAP Backend publishes to `bap.*` routing keys (requests from BAP Backend), and the BAP plugin's `bapTxnCaller` module consumes from `bap_caller_queue` which is bound to these `bap.*` routing keys.
 
 **How `publish-all.sh` works**:
 1. Scans the `example/` directory for all `.json` files
 2. Reads the `context.action` field from each JSON file
-3. Maps the action to the appropriate routing key (e.g., `discover` → `bpp.discover`)
+3. Maps the action to the appropriate routing key (e.g., `discover` → `bap.discover`)
 4. Generates unique transaction IDs and message IDs for each message
 5. Updates timestamps to current time
-6. Publishes each message to RabbitMQ with `bpp.*` routing keys that the BAP plugin's `bapTxnCaller` consumes
+6. Publishes each message to RabbitMQ with `bap.*` routing keys that the BAP plugin's `bapTxnCaller` consumes
 
 ## Configuration
 
@@ -260,8 +260,8 @@ Scripts use environment variables for configuration:
 ```bash
 export RABBITMQ_HOST=localhost      # Default: localhost
 export RABBITMQ_PORT=15672          # Default: 15672
-export RABBITMQ_USER=admin          # Default: admin
-export RABBITMQ_PASS=admin          # Default: admin
+export RABBITMQ_USER=guest          # Default: guest
+export RABBITMQ_PASS=guest          # Default: guest
 export EXCHANGE=beckn_exchange      # Default: beckn_exchange
 ```
 
@@ -275,11 +275,11 @@ RABBITMQ_HOST=192.168.1.100 ./publish-select.sh
 
 ## Message Flow
 
-These scripts act like BAP Backend, publishing requests to `bpp.*` routing keys that are consumed by the BAP plugin's `bapTxnCaller` module from `bap_caller_queue`.
+These scripts act like BAP Backend, publishing requests to `bap.*` routing keys that are consumed by the BAP plugin's `bapTxnCaller` module from `bap_caller_queue`.
 
 ### Phase 1: Discover Flow
-1. BAP Backend publishes `discover-*.json` message with routing key `bpp.discover`
-2. Message goes to `bap_caller_queue` queue (bound to `bpp.*` routing keys)
+1. BAP Backend publishes `discover-*.json` message with routing key `bap.discover`
+2. Message goes to `bap_caller_queue` queue (bound to `bap.*` routing keys)
 3. ONIX BAP plugin's `bapTxnCaller` consumes and processes
 4. BAP plugin routes to Mock CDS for aggregation
 5. Response published to `bap.on_discover` routing key
@@ -304,7 +304,7 @@ These scripts act like BAP Backend, publishing requests to `bpp.*` routing keys 
 
 ### RabbitMQ Setup
 - RabbitMQ must be running with Management Plugin enabled
-- Default credentials: admin/admin
+- Default credentials: guest/guest
 - Exchange `beckn_exchange` must exist
 
 ## Testing Consumer Behavior
