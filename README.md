@@ -98,10 +98,10 @@ The **onix-adapter** is a production-ready, plugin-based middleware adapter for 
 
 Start with the **Complete Sandbox** for a full testing environment with all services:
 
-**Monolithic Architecture** (Single service per endpoint):
+**Monolithic API Sandbox** (REST API communication):
 ```bash
-# Navigate to the monolithic sandbox directory
-cd sandbox/docker/monolithic/api
+# Navigate to the monolithic API sandbox directory
+cd sandbox/docker/api/monolithic
 
 # Start all services (ONIX adapters, mock services, Redis)
 docker-compose up -d
@@ -113,12 +113,46 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-For detailed instructions, see: **[Monolithic Sandbox Integration Guide](./sandbox/docker/monolithic/api/README.md)**
+For detailed instructions, see: **[Monolithic API Sandbox Guide](./sandbox/docker/api/monolithic/README.md)**
 
-**Microservice Architecture** (Single adapter with endpoint-based routing):
+**RabbitMQ Sandbox** (Message queue integration):
 ```bash
-# Navigate to the microservice sandbox directory
-cd sandbox/docker/microservice/api
+# Navigate to the RabbitMQ sandbox directory
+cd sandbox/docker/rabbitmq
+
+# Start all services (ONIX adapters, RabbitMQ, mock services, Redis)
+docker-compose up -d
+
+# Verify services are running
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+For detailed instructions, see: **[RabbitMQ Sandbox Guide](./sandbox/docker/rabbitmq/README.md)**
+
+**Kafka Sandbox** (Event streaming integration):
+```bash
+# Navigate to the Kafka sandbox directory
+cd sandbox/docker/kafka
+
+# Start all services (ONIX adapters, Kafka, Zookeeper, mock services, Redis)
+docker-compose up -d
+
+# Verify services are running
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+For detailed instructions, see: **[Kafka Sandbox Guide](./sandbox/docker/kafka/README.md)**
+
+**Microservice API Sandbox** (Single adapter with endpoint-based routing):
+```bash
+# Navigate to the microservice API sandbox directory
+cd sandbox/docker/api/microservice
 
 # Start all services (ONIX adapters, multiple mock services, Redis)
 docker-compose up -d
@@ -130,7 +164,7 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-For detailed instructions, see: **[Microservice Sandbox Integration Guide](./sandbox/docker/microservice/api/README.md)**
+For detailed instructions, see: **[Microservice API Sandbox Guide](./sandbox/docker/api/microservice/README.md)**
 
 #### Option 2: Standalone ONIX Adapters
 
@@ -139,7 +173,7 @@ For deploying only the ONIX adapters without mock services:
 **Monolithic Architecture**:
 ```bash
 # Navigate to the monolithic API directory
-cd docker/monolithic/api
+cd docker/api/monolithic
 
 # Start BAP services
 docker-compose -f docker-compose-onix-bap-plugin.yml up -d
@@ -152,12 +186,12 @@ docker-compose -f docker-compose-onix-bap-plugin.yml ps
 docker-compose -f docker-compose-onix-bpp-plugin.yml ps
 ```
 
-For detailed instructions, see: **[Monolithic API Integration Guide](./docker/monolithic/api/README.md)**
+For detailed instructions, see: **[Monolithic API Integration Guide](./docker/api/monolithic/README.md)**
 
 **Microservice Architecture**:
 ```bash
 # Navigate to the microservice API directory
-cd docker/microservice/api
+cd docker/api/microservice
 
 # Start BAP services
 docker-compose -f docker-compose-onix-bap-plugin.yml up -d
@@ -170,7 +204,7 @@ docker-compose -f docker-compose-onix-bap-plugin.yml ps
 docker-compose -f docker-compose-onix-bpp-plugin.yml ps
 ```
 
-For detailed instructions, see: **[Microservice API Integration Guide](./docker/microservice/api/README.md)**
+For detailed instructions, see: **[Microservice API Integration Guide](./docker/api/microservice/README.md)**
 
 ---
 
@@ -230,6 +264,8 @@ Phase 2+: Direct BPP Communication
    - Signer/SignValidator (Ed25519)
    - SchemaValidator (JSON schema validation)
    - KeyManager (HashiCorp Vault or simple key management)
+   - Consumer (Kafka/RabbitMQ message consumption)
+   - Publisher (Kafka/RabbitMQ message publishing)
 
 ---
 
@@ -238,31 +274,33 @@ Phase 2+: Direct BPP Communication
 ### 1. Docker Container Integration
 
 #### 1.0 Sandbox Environments
-- **[1.0.1 Monolithic Sandbox](./sandbox/docker/monolithic/api/README.md)** ✅ **Ready** - Full testing environment with monolithic architecture
-- **[1.0.2 Microservice Sandbox](./sandbox/docker/microservice/api/README.md)** ✅ **Ready** - Full testing environment with microservice architecture
-- [1.0.3 Standalone Mock Services](./sandbox/) - Individual mock service deployments
+- **[1.0.1 Monolithic API Sandbox](./sandbox/docker/api/monolithic/README.md)** ✅ **Ready** - Full testing environment with monolithic architecture (REST API)
+- **[1.0.2 Microservice API Sandbox](./sandbox/docker/api/microservice/README.md)** ✅ **Ready** - Full testing environment with microservice architecture (REST API)
+- **[1.0.3 RabbitMQ Sandbox](./sandbox/docker/rabbitmq/README.md)** ✅ **Ready** - Full testing environment with RabbitMQ message queue integration
+- **[1.0.4 Kafka Sandbox](./sandbox/docker/kafka/README.md)** ✅ **Ready** - Full testing environment with Apache Kafka event streaming integration
+- [1.0.5 Standalone Mock Services](./sandbox/) - Individual mock service deployments (BAP/BPP for REST API, Kafka, and RabbitMQ)
 
 #### 1.1 Monolithic Architecture
-- **[1.1.1 API Integration](./docker/monolithic/api/README.md)** ✅ **Ready** - Standalone ONIX adapters
-- **[1.1.2 RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)** ✅ **Ready** - Message queue-based integration
-- **[1.1.3 Kafka Integration](./docker/monolithic/kafka/README.md)** ✅ **Ready** - Event streaming integration
+- **[1.1.1 API Integration](./docker/api/monolithic/README.md)** ✅ **Ready** - Standalone ONIX adapters
 
 #### 1.2 Microservice Architecture
-- **[1.2.1 API Integration](./docker/microservice/api/README.md)** ✅ **Ready** - Standalone ONIX adapters with endpoint-based routing
-- **[1.2.2 RabbitMQ Integration](./docker/microservice/rabbitmq/README.md)** ✅ **Ready** - Message queue-based integration
-- **[1.2.3 Kafka Integration](./docker/microservice/kafka/README.md)** ✅ **Ready** - Event streaming integration
+- **[1.2.1 API Integration](./docker/api/microservice/README.md)** ✅ **Ready** - Standalone ONIX adapters with endpoint-based routing
+
+#### 1.3 Message Queue & Event Streaming (Works for both architectures)
+- **[1.3.1 RabbitMQ Integration](./docker/rabbitmq/README.md)** ✅ **Ready** - Message queue-based integration
+- **[1.3.2 Kafka Integration](./docker/kafka/README.md)** ✅ **Ready** - Event streaming integration
 
 ### 2. Helm Chart Integration
 
 #### 2.1 Monolithic Architecture
-- **[2.1.1 API Integration](./helm/monolithic/api/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
-- [2.1.2 RabbitMQ Integration](./helm/monolithic/rabbitmq/README.md) - Coming soon
-- [2.1.3 Kafka Integration](./helm/monolithic/kafka/README.md) - Coming soon
+- **[2.1.1 API Integration](./helm/api/monolithic/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
 
 #### 2.2 Microservice Architecture
-- **[2.2.1 API Integration](./helm/microservice/api/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
-- [2.2.2 RabbitMQ Integration](./helm/microservice/rabbitmq/README.md) - Coming soon
-- [2.2.3 Kafka Integration](./helm/microservice/kafka/README.md) - Coming soon
+- **[2.2.1 API Integration](./helm/api/microservice/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
+
+#### 2.3 Message Queue & Event Streaming (Works for both architectures)
+- [2.3.1 RabbitMQ Integration](./helm/rabbitmq/README.md) - Coming soon
+- [2.3.2 Kafka Integration](./helm/kafka/README.md) - Coming soon
 
 ---
 
@@ -273,8 +311,8 @@ Phase 2+: Direct BPP Communication
 ```
 ev_charging_sandbox/
 ├── docker/
-│   ├── monolithic/
-│   │   ├── api/                      # ✅ Standalone ONIX adapter integration
+│   ├── api/
+│   │   ├── monolithic/               # ✅ Standalone ONIX adapter integration
 │   │   │   ├── docker-compose-onix-bap-plugin.yml
 │   │   │   ├── docker-compose-onix-bpp-plugin.yml
 │   │   │   ├── config/
@@ -287,28 +325,51 @@ ev_charging_sandbox/
 │   │   │   │       ├── bpp_caller_routing.yaml
 │   │   │   │       └── bpp_receiver_routing.yaml
 │   │   │   └── README.md
-│   │   ├── rabbitmq/                 # Monolithic RabbitMQ integration
-│   │   └── kafka/                    # Monolithic Kafka integration
-│   └── microservice/
-│       ├── api/                      # ✅ Microservice API integration
-│       │   ├── docker-compose-onix-bap-plugin.yml
-│       │   ├── docker-compose-onix-bpp-plugin.yml
-│       │   ├── config/
-│       │   │   ├── onix-bap/
-│       │   │   │   ├── adapter.yaml
-│       │   │   │   ├── bap_caller_routing.yaml
-│       │   │   │   └── bap_receiver_routing.yaml
-│       │   │   └── onix-bpp/
-│       │   │       ├── adapter.yaml
-│       │   │       ├── bpp_caller_routing.yaml
-│       │   │       └── bpp_receiver_routing.yaml
-│       │   └── README.md
-│       ├── rabbitmq/                 # Microservice RabbitMQ integration
-│       └── kafka/                    # Microservice Kafka integration
+│   │   └── microservice/             # ✅ Microservice API integration
+│   │       ├── docker-compose-onix-bap-plugin.yml
+│   │       ├── docker-compose-onix-bpp-plugin.yml
+│   │       ├── config/
+│   │       │   ├── onix-bap/
+│   │       │   │   ├── adapter.yaml
+│   │       │   │   ├── bap_caller_routing.yaml
+│   │       │   │   └── bap_receiver_routing.yaml
+│   │       │   └── onix-bpp/
+│   │       │       ├── adapter.yaml
+│   │       │       ├── bpp_caller_routing.yaml
+│   │       │       └── bpp_receiver_routing.yaml
+│   │       └── README.md
+│   ├── kafka/                        # Kafka integration
+│   │   ├── config/
+│   │   │   ├── onix-bap/
+│   │   │   │   ├── adapter.yaml
+│   │   │   │   ├── bapTxnCaller-routing.yaml
+│   │   │   │   └── bapTxnReciever-routing.yaml
+│   │   │   └── onix-bpp/
+│   │   │       ├── adapter.yaml
+│   │   │       ├── bppTxnCaller-routing.yaml
+│   │   │       └── bppTxnReciever-routing.yaml
+│   │   ├── docker-compose-onix-bap-kafka-plugin.yml
+│   │   ├── docker-compose-onix-bpp-kafka-plugin.yml
+│   │   └── README.md
+│   └── rabbitmq/                     # RabbitMQ integration
+│       ├── config/
+│       │   ├── onix-bap/
+│       │   │   ├── adapter.yaml
+│       │   │   ├── bapTxnCaller-routing.yaml
+│       │   │   ├── bapTxnReciever-routing.yaml
+│       │   │   └── plugin.yaml
+│       │   └── onix-bpp/
+│       │       ├── adapter.yaml
+│       │       ├── bppTxnCaller-routing.yaml
+│       │       ├── bppTxnReciever-routing.yaml
+│       │       └── plugin.yaml
+│       ├── docker-compose-onix-bap-rabbit-mq-plugin.yml
+│       ├── docker-compose-onix-bpp-rabbit-mq-plugin.yml
+│       └── README.md
 ├── sandbox/                          # ✅ Complete sandbox environments
 │   ├── docker/
-│   │   ├── monolithic/
-│   │   │   ├── api/                  # Monolithic sandbox with all services
+│   │   ├── api/
+│   │   │   ├── monolithic/           # Monolithic API sandbox with all services
 │   │   │   │   ├── docker-compose.yml
 │   │   │   │   ├── onix-bap_config.yml
 │   │   │   │   ├── onix-bpp_config.yml
@@ -317,34 +378,61 @@ ev_charging_sandbox/
 │   │   │   │   ├── mock-bap_config.yml
 │   │   │   │   ├── mock-bpp_config.yml
 │   │   │   │   └── README.md
-│   │   │   ├── kafka/
-│   │   │   └── rabbitmq/
-│   │   └── microservice/
-│   │       ├── api/                  # Microservice sandbox with all services
-│   │       │   ├── docker-compose.yml
-│   │       │   ├── onix-bap_config.yml
-│   │       │   ├── onix-bpp_config.yml
-│   │       │   ├── mock-registry_config.yml
-│   │       │   ├── mock-cds_config.yml
-│   │       │   ├── mock-bap_config.yml
-│   │       │   ├── mock-bpp_config.yml
-│   │       │   └── README.md
-│   │       ├── kafka/
-│   │       └── rabbitmq/
-│   ├── k8s/                          # Kubernetes sandbox deployments
-│   ├── mock-bap/                     # Standalone mock BAP service
-│   ├── mock-bpp/                     # Standalone mock BPP service
+│   │   │   └── microservice/          # Microservice API sandbox with all services
+│   │   │       ├── docker-compose.yml
+│   │   │       ├── onix-bap_config.yml
+│   │   │       ├── onix-bpp_config.yml
+│   │   │       ├── mock-registry_config.yml
+│   │   │       ├── mock-cds_config.yml
+│   │   │       ├── mock-bap_config.yml
+│   │   │       ├── mock-bpp_config.yml
+│   │   │       └── README.md
+│   │   ├── kafka/                    # Kafka sandbox
+│   │   │   ├── docker-compose.yml
+│   │   │   ├── mock-bap-kafka_config.yml
+│   │   │   ├── mock-bpp-kafka_config.yml
+│   │   │   ├── mock-cds_config.yml
+│   │   │   ├── mock-registry_config.yml
+│   │   │   ├── message/              # Test messages and publishing scripts
+│   │   │   │   ├── bap/
+│   │   │   │   │   ├── example/      # JSON message files
+│   │   │   │   │   ├── test/         # Publishing scripts
+│   │   │   │   │   └── README.md
+│   │   │   │   └── bpp/
+│   │   │   │       ├── example/      # JSON callback files
+│   │   │   │       ├── test/         # Publishing scripts
+│   │   │   │       └── README.md
+│   │   │   └── README.md
+│   │   └── rabbitmq/                 # RabbitMQ sandbox
+│   │       ├── docker-compose.yml
+│   │       ├── mock-bap-rabbitMq_config.yml
+│   │       ├── mock-bpp-rabbitMq_config.yml
+│   │       ├── mock-cds_config.yml
+│   │       ├── mock-registry_config.yml
+│   │       ├── message/              # Test messages and publishing scripts
+│   │       │   ├── bap/
+│   │       │   │   ├── example/      # JSON message files
+│   │       │   │   ├── test/        # Publishing scripts
+│   │       │   │   └── README.md
+│   │       │   └── bpp/
+│   │       │       ├── example/      # JSON callback files
+│   │       │       ├── test/        # Publishing scripts
+│   │       │       └── README.md
+│   │       └── README.md
+│   ├── mock-bap/                     # Standalone mock BAP service (REST API)
+│   ├── mock-bap-kafka/               # Standalone mock BAP service (Kafka)
+│   ├── mock-bap-rabbitMq/            # Standalone mock BAP service (RabbitMQ)
+│   ├── mock-bpp/                     # Standalone mock BPP service (REST API)
+│   ├── mock-bpp-kafka/               # Standalone mock BPP service (Kafka)
+│   ├── mock-bpp-rabbitMq/            # Standalone mock BPP service (RabbitMQ)
 │   ├── mock-cds/                     # Standalone mock CDS service
 │   └── mock-registry/                # Standalone mock Registry service
 ├── helm/
-│   ├── monolithic/
-│   │   ├── api/                      # Helm chart for monolithic API
-│   │   ├── rabbitmq/                 # Helm chart for monolithic RabbitMQ
-│   │   └── kafka/                    # Helm chart for monolithic Kafka
-│   └── microservice/
-│       ├── api/                      # Helm chart for microservice API
-│       ├── rabbitmq/                 # Helm chart for microservice RabbitMQ
-│       └── kafka/                    # Helm chart for microservice Kafka
+│   ├── api/
+│   │   ├── monolithic/               # Helm chart for monolithic API
+│   │   └── microservice/             # Helm chart for microservice API
+│   ├── kafka/                        # Helm chart for Kafka
+│   └── rabbitmq/                     # Helm chart for RabbitMQ
 ├── api-collection/                   # Postman collections and Swagger specs
 ├── schemas/                          # JSON schema files for validation
 ├── LICENSE
@@ -357,15 +445,18 @@ Each integration method includes:
 
 1. **Docker Compose Files**: Service definitions with networking and volumes
 2. **Adapter Configuration** (`adapter.yaml`): Core adapter settings, modules, and plugins
+   - For Kafka integrations, consumer plugin uses `consumer:` with `id: consumer` structure
+   - For RabbitMQ integrations, consumer plugin uses `rabbitmqConsumer:` with `id: rabbitmqconsumer` structure
 3. **Routing Configuration**: YAML files defining routing rules for BAP and BPP
 4. **Environment Variables**: Container environment configuration
 
 ### Key Configuration Areas
 
 - **HTTP Settings**: Port, timeouts, and connection pooling
-- **Plugin Configuration**: Cache, router, signer, validators
+- **Plugin Configuration**: Cache, router, signer, validators, consumer, publisher
 - **Module Definition**: Transaction receivers and callers
 - **Routing Rules**: Phase 1 (CDS) and Phase 2+ (Direct BPP) routing
+- **Consumer Configuration**: For Kafka/RabbitMQ integrations, consumer plugin with `id: consumer` and configurable message consumption settings
 
 ---
 
@@ -373,10 +464,10 @@ Each integration method includes:
 
 ### Complete Sandbox Environment
 
-**Monolithic Architecture:**
+**Monolithic API Sandbox:**
 ```bash
-# Navigate to the monolithic sandbox directory
-cd sandbox/docker/monolithic/api
+# Navigate to the monolithic API sandbox directory
+cd sandbox/docker/api/monolithic
 
 # Start all services (ONIX adapters, mock services, Redis)
 docker-compose up -d
@@ -394,10 +485,52 @@ docker-compose logs -f onix-bap-plugin
 docker-compose down
 ```
 
-**Microservice Architecture:**
+**RabbitMQ Sandbox:**
 ```bash
-# Navigate to the microservice sandbox directory
-cd sandbox/docker/microservice/api
+# Navigate to the RabbitMQ sandbox directory
+cd sandbox/docker/rabbitmq
+
+# Start all services (ONIX adapters, RabbitMQ, mock services, Redis)
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs for all services
+docker-compose logs -f
+
+# Publish test messages
+cd message/bap/test && ./publish-all.sh
+
+# Stop all services
+docker-compose down
+```
+
+**Kafka Sandbox:**
+```bash
+# Navigate to the Kafka sandbox directory
+cd sandbox/docker/kafka
+
+# Start all services (ONIX adapters, Kafka, Zookeeper, mock services, Redis)
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs for all services
+docker-compose logs -f
+
+# Publish test messages
+cd message/bap/test && ./publish-all.sh
+
+# Stop all services
+docker-compose down
+```
+
+**Microservice API Sandbox:**
+```bash
+# Navigate to the microservice API sandbox directory
+cd sandbox/docker/api/microservice
 
 # Start all services (ONIX adapters, multiple mock services, Redis)
 docker-compose up -d
@@ -415,7 +548,7 @@ docker-compose logs -f onix-bap-plugin
 docker-compose down
 ```
 
-**Available Endpoints (Monolithic):**
+**Available Endpoints (Monolithic API):**
 - **ONIX BAP**: `http://localhost:8001/bap/caller/{action}` and `http://localhost:8001/bap/receiver/{action}`
 - **ONIX BPP**: `http://localhost:8002/bpp/caller/{action}` and `http://localhost:8002/bpp/receiver/{action}`
 - **Mock Registry**: `http://localhost:3030`
@@ -423,7 +556,21 @@ docker-compose down
 - **Mock BAP**: `http://localhost:9001`
 - **Mock BPP**: `http://localhost:9002`
 
-**Available Endpoints (Microservice):**
+**Available Endpoints (RabbitMQ):**
+- **ONIX BAP**: `http://localhost:8001/bap/receiver/{action}`
+- **ONIX BPP**: `http://localhost:8002/bpp/receiver/{action}`
+- **RabbitMQ Management UI**: `http://localhost:15672` (guest/guest)
+- **Mock Registry**: `http://localhost:3030`
+- **Mock CDS**: `http://localhost:8082`
+
+**Available Endpoints (Kafka):**
+- **ONIX BAP**: `http://localhost:8001/bap/receiver/{action}`
+- **ONIX BPP**: `http://localhost:8002/bpp/receiver/{action}`
+- **Kafka**: `localhost:9092`
+- **Mock Registry**: `http://localhost:3030`
+- **Mock CDS**: `http://localhost:8082`
+
+**Available Endpoints (Microservice API):**
 - **ONIX BAP**: `http://localhost:8001/bap/caller/{action}` and `http://localhost:8001/bap/receiver/{action}`
 - **ONIX BPP**: `http://localhost:8002/bpp/caller/{action}` and `http://localhost:8002/bpp/receiver/{action}`
 - **Mock Registry**: `http://localhost:3030`
@@ -437,7 +584,7 @@ docker-compose down
 
 ```bash
 # Navigate to the integration directory
-cd docker/monolithic/api
+cd docker/api/monolithic
 
 # Start BAP services
 docker-compose -f docker-compose-onix-bap-plugin.yml up -d
@@ -460,7 +607,7 @@ docker-compose -f docker-compose-onix-bap-plugin.yml down
 
 ```bash
 # Navigate to the integration directory
-cd docker/monolithic/api
+cd docker/api/monolithic
 
 # Start BPP services
 docker-compose -f docker-compose-onix-bpp-plugin.yml up -d
@@ -531,23 +678,23 @@ curl -X POST http://localhost:8001/bap/caller/discover \
 ### Integration Guides
 
 #### Sandbox Environments
-- **[Monolithic Sandbox Guide](./sandbox/docker/monolithic/api/README.md)**: ✅ Complete sandbox with monolithic architecture
-- **[Microservice Sandbox Guide](./sandbox/docker/microservice/api/README.md)**: ✅ Complete sandbox with microservice architecture
-- **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP, BPP, CDS, Registry)
+- **[Monolithic API Sandbox Guide](./sandbox/docker/api/monolithic/README.md)**: ✅ Complete sandbox with monolithic architecture (REST API)
+- **[Microservice API Sandbox Guide](./sandbox/docker/api/microservice/README.md)**: ✅ Complete sandbox with microservice architecture (REST API)
+- **[RabbitMQ Sandbox Guide](./sandbox/docker/rabbitmq/README.md)**: ✅ Complete sandbox with RabbitMQ message queue integration
+- **[Kafka Sandbox Guide](./sandbox/docker/kafka/README.md)**: ✅ Complete sandbox with Apache Kafka event streaming integration
+- **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP/BPP for REST API, Kafka, and RabbitMQ; CDS, Registry)
 
 #### ONIX Adapter Integration
 
 **Docker Integration:**
-- **[Monolithic API Integration](./docker/monolithic/api/README.md)**: ✅ Complete guide for standalone Docker-based ONIX adapter deployment
-- **[Microservice API Integration](./docker/microservice/api/README.md)**: ✅ Complete guide for microservice architecture with endpoint-based routing
-- **[Monolithic RabbitMQ Integration](./docker/monolithic/rabbitmq/README.md)**: ✅ Complete guide for RabbitMQ message queue-based integration
-- **[Microservice RabbitMQ Integration](./docker/microservice/rabbitmq/README.md)**: ✅ Complete guide for microservice RabbitMQ integration
-- **[Monolithic Kafka Integration](./docker/monolithic/kafka/README.md)**: ✅ Complete guide for Apache Kafka event streaming integration
-- **[Microservice Kafka Integration](./docker/microservice/kafka/README.md)**: ✅ Complete guide for microservice Kafka integration
+- **[Monolithic API Integration](./docker/api/monolithic/README.md)**: ✅ Complete guide for standalone Docker-based ONIX adapter deployment
+- **[Microservice API Integration](./docker/api/microservice/README.md)**: ✅ Complete guide for microservice architecture with endpoint-based routing
+- **[RabbitMQ Integration](./docker/rabbitmq/README.md)**: ✅ Complete guide for RabbitMQ message queue-based integration (works for both monolithic and microservice architectures)
+- **[Kafka Integration](./docker/kafka/README.md)**: ✅ Complete guide for Apache Kafka event streaming integration (works for both monolithic and microservice architectures)
 
 **Helm Chart Integration:**
-- **[Monolithic API Integration](./helm/monolithic/api/README.md)**: ✅ Complete guide for Kubernetes deployment with Helm charts
-- **[Microservice API Integration](./helm/microservice/api/README.md)**: ✅ Complete guide for microservice Kubernetes deployment
+- **[Monolithic API Integration](./helm/api/monolithic/README.md)**: ✅ Complete guide for Kubernetes deployment with Helm charts
+- **[Microservice API Integration](./helm/api/microservice/README.md)**: ✅ Complete guide for microservice Kubernetes deployment
 
 ### Related Documentation
 

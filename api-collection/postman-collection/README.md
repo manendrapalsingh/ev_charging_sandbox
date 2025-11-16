@@ -32,6 +32,16 @@ api-collection/
 │       ├── on_support/           # Response to support request
 │       └── on_rating/            # Response to rating request
 │
+├── meta/                         # Meta APIs for Network Provider
+│   ├── postman-collection/       # Meta ledger API collections
+│   │   ├── Meta-Rating-Ledger.postman_collection.json
+│   │   ├── Meta-Grievance-Ledger.postman_collection.json
+│   │   ├── Meta-Transaction-Ledger.postman_collection.json
+│   │   └── Meta-All-Ledgers.postman_collection.json
+│   ├── swagger/                  # Meta API OpenAPI specification
+│   │   └── meta-ledger.yaml
+│   └── README.md                 # Meta API documentation
+│
 └── swagger/                      # OpenAPI/Swagger specifications
     ├── bap.yaml                  # BAP API OpenAPI specification
     └── bpp.yaml                  # BPP API OpenAPI specification
@@ -166,6 +176,19 @@ BPP collections contain callback APIs that the seller platform (charging provide
 - **on_support**: Response to support queries
 - **on_rating**: Acknowledgment of rating submission
 
+#### Meta Ledger Collections
+
+Meta collections contain APIs for the network provider to collect and store data from BAP and BPP participants. These are used for centralized ledger management.
+
+**Available APIs:**
+- **rating_ledger**: Store rating and feedback data from BAP/BPP
+- **grievance_ledger**: Store support requests and grievance data from BAP/BPP
+- **transaction_ledger**: Store transaction and payment data from BAP/BPP
+
+These APIs enable the network provider to maintain comprehensive records for analytics, compliance, and dispute resolution.
+
+For detailed documentation, see `/api-collection/meta/README.md`
+
 ## Getting Started
 
 ### Importing Collections
@@ -297,6 +320,8 @@ A typical EV charging flow using these collections:
 - Swagger/OpenAPI Specifications: 
   - BAP API: `/api-collection/swagger/bap.yaml`
   - BPP API: `/api-collection/swagger/bpp.yaml`
+  - Meta Ledger API: `/api-collection/meta/swagger/meta-ledger.yaml`
+- Meta Ledger APIs: `/api-collection/meta/README.md`
 
 ## Support
 
