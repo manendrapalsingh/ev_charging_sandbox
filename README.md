@@ -264,6 +264,8 @@ Phase 2+: Direct BPP Communication
    - Signer/SignValidator (Ed25519)
    - SchemaValidator (JSON schema validation)
    - KeyManager (HashiCorp Vault or simple key management)
+   - Consumer (Kafka/RabbitMQ message consumption)
+   - Publisher (Kafka/RabbitMQ message publishing)
 
 ---
 
@@ -276,7 +278,7 @@ Phase 2+: Direct BPP Communication
 - **[1.0.2 Microservice API Sandbox](./sandbox/docker/api/microservice/README.md)** ✅ **Ready** - Full testing environment with microservice architecture (REST API)
 - **[1.0.3 RabbitMQ Sandbox](./sandbox/docker/rabbitmq/README.md)** ✅ **Ready** - Full testing environment with RabbitMQ message queue integration
 - **[1.0.4 Kafka Sandbox](./sandbox/docker/kafka/README.md)** ✅ **Ready** - Full testing environment with Apache Kafka event streaming integration
-- [1.0.5 Standalone Mock Services](./sandbox/) - Individual mock service deployments
+- [1.0.5 Standalone Mock Services](./sandbox/) - Individual mock service deployments (BAP/BPP for REST API, Kafka, and RabbitMQ)
 
 #### 1.1 Monolithic Architecture
 - **[1.1.1 API Integration](./docker/api/monolithic/README.md)** ✅ **Ready** - Standalone ONIX adapters
@@ -338,11 +340,29 @@ ev_charging_sandbox/
 │   │       └── README.md
 │   ├── kafka/                        # Kafka integration
 │   │   ├── config/
+│   │   │   ├── onix-bap/
+│   │   │   │   ├── adapter.yaml
+│   │   │   │   ├── bapTxnCaller-routing.yaml
+│   │   │   │   └── bapTxnReciever-routing.yaml
+│   │   │   └── onix-bpp/
+│   │   │       ├── adapter.yaml
+│   │   │       ├── bppTxnCaller-routing.yaml
+│   │   │       └── bppTxnReciever-routing.yaml
 │   │   ├── docker-compose-onix-bap-kafka-plugin.yml
 │   │   ├── docker-compose-onix-bpp-kafka-plugin.yml
 │   │   └── README.md
 │   └── rabbitmq/                     # RabbitMQ integration
 │       ├── config/
+│       │   ├── onix-bap/
+│       │   │   ├── adapter.yaml
+│       │   │   ├── bapTxnCaller-routing.yaml
+│       │   │   ├── bapTxnReciever-routing.yaml
+│       │   │   └── plugin.yaml
+│       │   └── onix-bpp/
+│       │       ├── adapter.yaml
+│       │       ├── bppTxnCaller-routing.yaml
+│       │       ├── bppTxnReciever-routing.yaml
+│       │       └── plugin.yaml
 │       ├── docker-compose-onix-bap-rabbit-mq-plugin.yml
 │       ├── docker-compose-onix-bpp-rabbit-mq-plugin.yml
 │       └── README.md
@@ -375,7 +395,13 @@ ev_charging_sandbox/
 │   │   │   ├── mock-registry_config.yml
 │   │   │   ├── message/              # Test messages and publishing scripts
 │   │   │   │   ├── bap/
+│   │   │   │   │   ├── example/      # JSON message files
+│   │   │   │   │   ├── test/         # Publishing scripts
+│   │   │   │   │   └── README.md
 │   │   │   │   └── bpp/
+│   │   │   │       ├── example/      # JSON callback files
+│   │   │   │       ├── test/         # Publishing scripts
+│   │   │   │       └── README.md
 │   │   │   └── README.md
 │   │   └── rabbitmq/                 # RabbitMQ sandbox
 │   │       ├── docker-compose.yml
@@ -385,11 +411,20 @@ ev_charging_sandbox/
 │   │       ├── mock-registry_config.yml
 │   │       ├── message/              # Test messages and publishing scripts
 │   │       │   ├── bap/
+│   │       │   │   ├── example/      # JSON message files
+│   │       │   │   ├── test/        # Publishing scripts
+│   │       │   │   └── README.md
 │   │       │   └── bpp/
+│   │       │       ├── example/      # JSON callback files
+│   │       │       ├── test/        # Publishing scripts
+│   │       │       └── README.md
 │   │       └── README.md
-│   ├── k8s/                          # Kubernetes sandbox deployments
-│   ├── mock-bap/                     # Standalone mock BAP service
-│   ├── mock-bpp/                     # Standalone mock BPP service
+│   ├── mock-bap/                     # Standalone mock BAP service (REST API)
+│   ├── mock-bap-kafka/               # Standalone mock BAP service (Kafka)
+│   ├── mock-bap-rabbitMq/            # Standalone mock BAP service (RabbitMQ)
+│   ├── mock-bpp/                     # Standalone mock BPP service (REST API)
+│   ├── mock-bpp-kafka/               # Standalone mock BPP service (Kafka)
+│   ├── mock-bpp-rabbitMq/            # Standalone mock BPP service (RabbitMQ)
 │   ├── mock-cds/                     # Standalone mock CDS service
 │   └── mock-registry/                # Standalone mock Registry service
 ├── helm/
@@ -410,15 +445,18 @@ Each integration method includes:
 
 1. **Docker Compose Files**: Service definitions with networking and volumes
 2. **Adapter Configuration** (`adapter.yaml`): Core adapter settings, modules, and plugins
+   - For Kafka integrations, consumer plugin uses `consumer:` with `id: consumer` structure
+   - For RabbitMQ integrations, consumer plugin uses `rabbitmqConsumer:` with `id: rabbitmqconsumer` structure
 3. **Routing Configuration**: YAML files defining routing rules for BAP and BPP
 4. **Environment Variables**: Container environment configuration
 
 ### Key Configuration Areas
 
 - **HTTP Settings**: Port, timeouts, and connection pooling
-- **Plugin Configuration**: Cache, router, signer, validators
+- **Plugin Configuration**: Cache, router, signer, validators, consumer, publisher
 - **Module Definition**: Transaction receivers and callers
 - **Routing Rules**: Phase 1 (CDS) and Phase 2+ (Direct BPP) routing
+- **Consumer Configuration**: For Kafka/RabbitMQ integrations, consumer plugin with `id: consumer` and configurable message consumption settings
 
 ---
 
@@ -644,7 +682,7 @@ curl -X POST http://localhost:8001/bap/caller/discover \
 - **[Microservice API Sandbox Guide](./sandbox/docker/api/microservice/README.md)**: ✅ Complete sandbox with microservice architecture (REST API)
 - **[RabbitMQ Sandbox Guide](./sandbox/docker/rabbitmq/README.md)**: ✅ Complete sandbox with RabbitMQ message queue integration
 - **[Kafka Sandbox Guide](./sandbox/docker/kafka/README.md)**: ✅ Complete sandbox with Apache Kafka event streaming integration
-- **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP, BPP, CDS, Registry)
+- **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP/BPP for REST API, Kafka, and RabbitMQ; CDS, Registry)
 
 #### ONIX Adapter Integration
 
