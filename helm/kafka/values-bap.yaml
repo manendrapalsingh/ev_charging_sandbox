@@ -1,0 +1,20 @@
+# BAP-specific values for onix-kafka
+component: bap
+
+image:
+  repository: manendrapalsingh/onix-bap-plugin-kafka
+  tag: latest
+
+service:
+  port: 8001
+  targetPort: 8001
+
+redis:
+  enabled: true
+  service:
+    port: 6379
+
+env:
+  - name: CONFIG_FILE
+    value: /app/config/message-baised/kafka/onix-bap/adapter.yaml
+

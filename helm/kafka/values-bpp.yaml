@@ -1,0 +1,20 @@
+# BPP-specific values for onix-kafka
+component: bpp
+
+image:
+  repository: manendrapalsingh/onix-bpp-plugin-kafka
+  tag: latest
+
+service:
+  port: 8002
+  targetPort: 8002
+
+redis:
+  enabled: true
+  service:
+    port: 6379
+
+env:
+  - name: CONFIG_FILE
+    value: /app/config/message-baised/kafka/onix-bpp/adapter.yaml
+

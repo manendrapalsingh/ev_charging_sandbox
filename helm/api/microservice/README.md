@@ -138,11 +138,11 @@ config:
             discover:
               target:
                 type: url
-                url: "http://mock-cds:8082/csd"
+                url: "http://ev-charging-mock-cds:8082/csd"
             select:
               target:
                 type: url
-                url: "http://onix-bpp-service:8002/bpp/receiver/select"
+                url: "http://ev-charging-bpp-onix-api-microservice-bpp-service:8002/bpp/receiver/select"
             # ... other endpoints
     receiver: |
       routingRules:
@@ -152,11 +152,11 @@ config:
             on_discover:
               target:
                 type: url
-                url: "http://mock-bap-discover:9001"
+                url: "http://ev-charging-mock-bap-on-discover:9001"
             on_select:
               target:
                 type: url
-                url: "http://mock-bap-select:9001"
+                url: "http://ev-charging-mock-bap-on-select:9002"
             # ... other endpoints
 ```
 
@@ -325,7 +325,7 @@ kubectl delete pvc -l app=onix-bap
 
 2. **Check backend service connectivity:**
    ```bash
-   kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- curl http://mock-bap-select:9001/health
+   kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- curl http://ev-charging-mock-bap-on-select:9002/health
    ```
 
 ### Redis Connection Issues
