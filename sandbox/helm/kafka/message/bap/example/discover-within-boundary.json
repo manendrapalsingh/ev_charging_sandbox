@@ -12,7 +12,7 @@
       }
     },
     "bap_id": "ev-charging.sandbox1.com",
-    "bap_uri": "http://mock-bap-kafka:9003",
+    "bap_uri": "http://ev-charging-kafka-bap-onix-kafka-bap-service:8001/bap/receiver",
     "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
     "message_id": "550e8400-e29b-41d4-a716-446655440013",
     "timestamp": "2025-01-27T10:00:00Z",

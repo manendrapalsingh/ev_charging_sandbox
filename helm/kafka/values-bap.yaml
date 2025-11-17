@@ -9,12 +9,26 @@ service:
   port: 8001
   targetPort: 8001
 
+# Enable Kafka and Kafka UI for BAP release (shared resources)
+# Note: Mock services are configured via sandbox values file
+kafka:
+  enabled: true
+
+kafkaUI:
+  enabled: true
+
+mockServices:
+  enabled: false
+
 redis:
   enabled: true
+  # Redis host - if not set, will default to <release-name>-onix-kafka-redis-bap
+  # Set this if you want to use a different Redis service name or external Redis
+  # host: ""
   service:
     port: 6379
 
-env:
-  - name: CONFIG_FILE
-    value: /app/config/message-baised/kafka/onix-bap/adapter.yaml
+# Note: CONFIG_FILE is set automatically in the deployment template
+# No need to set it here to avoid duplicates
+env: []
 

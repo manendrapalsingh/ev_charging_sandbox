@@ -44,7 +44,41 @@ helm/api/monolithic/
 
 ## Quick Start
 
-### Install BAP Adapter
+### Deploy All Services (BAP and BPP)
+
+Deploy both BAP and BPP adapters together:
+
+```bash
+# Navigate to the helm chart directory
+cd helm/api/monolithic
+
+# Deploy BAP adapter
+helm upgrade --install onix-bap . -f values-bap.yaml
+
+# Deploy BPP adapter
+helm upgrade --install onix-bpp . -f values-bpp.yaml
+
+# Check deployment status
+kubectl get pods -l app=onix-bap
+kubectl get pods -l app=onix-bpp
+kubectl get svc -l 'app in (onix-bap,onix-bpp)'
+```
+
+**Or deploy both in one command:**
+
+```bash
+# Deploy both BAP and BPP adapters
+helm upgrade --install onix-bap ./helm/api/monolithic -f ./helm/api/monolithic/values-bap.yaml && \
+helm upgrade --install onix-bpp ./helm/api/monolithic -f ./helm/api/monolithic/values-bpp.yaml
+
+# Check all services
+kubectl get pods -l 'app in (onix-bap,onix-bpp)'
+kubectl get svc -l 'app in (onix-bap,onix-bpp)'
+```
+
+### Deploy Individual Services
+
+#### Install BAP Adapter
 
 ```bash
 # Install with default values
@@ -52,9 +86,12 @@ helm install onix-bap ./helm/api/monolithic -f ./helm/api/monolithic/values-bap.
 
 # Or install with custom values
 helm install onix-bap ./helm/api/monolithic -f ./helm/api/monolithic/values-bap.yaml --set image.tag=v1.0.0
+
+# Or use upgrade --install for idempotent deployment (recommended)
+helm upgrade --install onix-bap ./helm/api/monolithic -f ./helm/api/monolithic/values-bap.yaml
 ```
 
-### Install BPP Adapter
+#### Install BPP Adapter
 
 ```bash
 # Install with default values
@@ -62,6 +99,9 @@ helm install onix-bpp ./helm/api/monolithic -f ./helm/api/monolithic/values-bpp.
 
 # Or install with custom values
 helm install onix-bpp ./helm/api/monolithic -f ./helm/api/monolithic/values-bpp.yaml --set image.tag=v1.0.0
+
+# Or use upgrade --install for idempotent deployment (recommended)
+helm upgrade --install onix-bpp ./helm/api/monolithic -f ./helm/api/monolithic/values-bpp.yaml
 ```
 
 ### Check Status
@@ -78,6 +118,9 @@ kubectl get pods -l app=onix-bpp
 # Check services
 kubectl get svc -l app=onix-bap
 kubectl get svc -l app=onix-bpp
+
+# Check all services at once
+kubectl get pods,svc -l 'app in (onix-bap,onix-bpp)'
 ```
 
 ## Configuration
@@ -196,6 +239,13 @@ helm install onix-bap ./helm/api/monolithic \
 
 Once deployed, the services are accessible via Kubernetes services:
 
+### All Services Overview
+
+| Service | Service Name | Port | Caller Endpoint | Receiver Endpoint |
+|---------|--------------|------|----------------|-------------------|
+| **BAP** | `onix-bap-service` | 8001 | `http://onix-bap-service:8001/bap/caller/{action}` | `http://onix-bap-service:8001/bap/receiver/{action}` |
+| **BPP** | `onix-bpp-service` | 8002 | `http://onix-bpp-service:8002/bpp/caller/{action}` | `http://onix-bpp-service:8002/bpp/receiver/{action}` |
+
 ### BAP Service
 
 - **Service Name**: `onix-bap-service`
@@ -215,38 +265,117 @@ Once deployed, the services are accessible via Kubernetes services:
 If using `LoadBalancer` or `NodePort` service type:
 
 ```bash
-# Get external IP (LoadBalancer)
+# Get external IPs for all services
+kubectl get svc -l 'app in (onix-bap,onix-bpp)'
+
+# Get external IP for BAP (LoadBalancer)
 kubectl get svc onix-bap-service
 
-# Get NodePort (NodePort)
+# Get external IP for BPP (LoadBalancer)
+kubectl get svc onix-bpp-service
+
+# Get NodePort for BAP
 kubectl get svc onix-bap-service -o jsonpath='{.spec.ports[0].nodePort}'
+
+# Get NodePort for BPP
+kubectl get svc onix-bpp-service -o jsonpath='{.spec.ports[0].nodePort}'
+```
+
+### Port Forwarding (Alternative Access Method)
+
+If services are ClusterIP type, use port forwarding to access them locally:
+
+```bash
+# Port forward BAP service (run in separate terminal)
+kubectl port-forward svc/onix-bap-service 8001:8001
+
+# Port forward BPP service (run in separate terminal)
+kubectl port-forward svc/onix-bpp-service 8002:8002
+
+# Access services locally after port forwarding
+# BAP: http://localhost:8001/bap/caller/{action}
+# BPP: http://localhost:8002/bpp/caller/{action}
 ```
 
 ## Upgrading
 
-### Upgrade Release
+### Upgrade All Services
 
 ```bash
-# Upgrade with new values
+# Upgrade both BAP and BPP adapters
 helm upgrade onix-bap ./helm/api/monolithic \
   -f ./helm/api/monolithic/values-bap.yaml \
+  --set image.tag=v1.1.0 && \
+helm upgrade onix-bpp ./helm/api/monolithic \
+  -f ./helm/api/monolithic/values-bpp.yaml \
+  --set image.tag=v1.1.0
+
+# Or use upgrade --install for idempotent upgrades (recommended)
+helm upgrade --install onix-bap ./helm/api/monolithic \
+  -f ./helm/api/monolithic/values-bap.yaml \
+  --set image.tag=v1.1.0 && \
+helm upgrade --install onix-bpp ./helm/api/monolithic \
+  -f ./helm/api/monolithic/values-bpp.yaml \
   --set image.tag=v1.1.0
 
 # Check upgrade status
 helm status onix-bap
+helm status onix-bpp
+kubectl get pods -l 'app in (onix-bap,onix-bpp)'
+```
+
+### Upgrade Individual Release
+
+```bash
+# Upgrade BAP with new values
+helm upgrade onix-bap ./helm/api/monolithic \
+  -f ./helm/api/monolithic/values-bap.yaml \
+  --set image.tag=v1.1.0
+
+# Upgrade BPP with new values
+helm upgrade onix-bpp ./helm/api/monolithic \
+  -f ./helm/api/monolithic/values-bpp.yaml \
+  --set image.tag=v1.1.0
+
+# Check upgrade status
+helm status onix-bap
+helm status onix-bpp
 ```
 
 ### Rollback
 
 ```bash
-# List release history
+# List release history for all services
 helm history onix-bap
+helm history onix-bpp
 
-# Rollback to previous version
+# Rollback BAP to previous version
 helm rollback onix-bap 1
+
+# Rollback BPP to previous version
+helm rollback onix-bpp 1
+
+# Rollback both services
+helm rollback onix-bap 1 && helm rollback onix-bpp 1
 ```
 
 ## Uninstalling
+
+### Uninstall All Services
+
+```bash
+# Uninstall both BAP and BPP adapters
+helm uninstall onix-bap onix-bpp
+
+# Or uninstall individually
+helm uninstall onix-bap && helm uninstall onix-bpp
+
+# Remove associated resources (if needed)
+kubectl delete pvc -l 'app in (onix-bap,onix-bpp)'
+kubectl delete configmap -l 'app in (onix-bap,onix-bpp)'
+```
+
+### Uninstall Individual Services
 
 ```bash
 # Uninstall BAP
@@ -257,7 +386,258 @@ helm uninstall onix-bpp
 
 # Remove associated resources (if needed)
 kubectl delete pvc -l app=onix-bap
+kubectl delete configmap -l app=onix-bap
 ```
+
+## Testing with Sample Messages
+
+This section shows how to use the pre-formatted JSON test messages to test your API endpoints. Test messages are available in the `sandbox/docker/kafka/message/` directory.
+
+### Test Messages Location
+
+Test messages are organized by component:
+- **BAP Messages**: `sandbox/docker/kafka/message/bap/example/`
+- **BPP Messages**: `sandbox/docker/kafka/message/bpp/example/`
+
+### Available Test Messages
+
+#### BAP Test Messages (Outgoing Requests)
+
+| Action | File | Endpoint |
+|--------|------|----------|
+| discover | `discover-by-station.json` | `/bap/caller/discover` |
+| discover | `discover-by-evse.json` | `/bap/caller/discover` |
+| discover | `discover-by-cpo.json` | `/bap/caller/discover` |
+| discover | `discover-along-a-route.json` | `/bap/caller/discover` |
+| discover | `discover-within-boundary.json` | `/bap/caller/discover` |
+| discover | `discover-within-timerange.json` | `/bap/caller/discover` |
+| discover | `discover-connector-spec.json` | `/bap/caller/discover` |
+| discover | `discover-vehicle-spec.json` | `/bap/caller/discover` |
+| select | `select.json` | `/bap/caller/select` |
+| init | `init.json` | `/bap/caller/init` |
+| confirm | `confirm.json` | `/bap/caller/confirm` |
+| update | `update.json` | `/bap/caller/update` |
+| track | `track.json` | `/bap/caller/track` |
+| cancel | `cancel.json` | `/bap/caller/cancel` |
+| rating | `rating.json` | `/bap/caller/rating` |
+| support | `support.json` | `/bap/caller/support` |
+
+#### BPP Test Messages (Outgoing Responses)
+
+| Action | File | Endpoint |
+|--------|------|----------|
+| on_discover | `on_discover.json` | `/bpp/caller/on_discover` |
+| on_select | `on_select.json` | `/bpp/caller/on_select` |
+| on_init | `on_init.json` | `/bpp/caller/on_init` |
+| on_confirm | `on_confirm.json` | `/bpp/caller/on_confirm` |
+| on_status | `on_status.json` | `/bpp/caller/on_status` |
+| on_track | `on_track.json` | `/bpp/caller/on_track` |
+| on_cancel | `on_cancel.json` | `/bpp/caller/on_cancel` |
+| on_update | `on_update.json` | `/bpp/caller/on_update` |
+| on_rating | `on_rating.json` | `/bpp/caller/on_rating` |
+| on_support | `on_support.json` | `/bpp/caller/on_support` |
+
+### Using Test Messages with curl
+
+#### Prerequisites
+
+1. **Port Forward Services** (if using ClusterIP):
+   ```bash
+   # Port forward BAP service
+   kubectl port-forward svc/onix-bap-service 8001:8001 &
+   
+   # Port forward BPP service
+   kubectl port-forward svc/onix-bpp-service 8002:8002 &
+   ```
+
+2. **Get Service URLs**:
+   - If using LoadBalancer: Get external IP from `kubectl get svc`
+   - If using port forwarding: Use `http://localhost:8001` (BAP) and `http://localhost:8002` (BPP)
+
+#### Example: Send Discover Request (BAP)
+
+```bash
+# Navigate to message directory
+cd sandbox/docker/kafka/message/bap/example
+
+# Send discover request
+curl -X POST http://localhost:8001/bap/caller/discover \
+  -H "Content-Type: application/json" \
+  -d @discover-by-station.json
+```
+
+**Note**: Update the `bap_uri` in the JSON file to match your BAP backend service URL before sending.
+
+#### Example: Send Select Request (BAP)
+
+```bash
+# Update bap_uri and bpp_uri in the JSON file first
+# Then send select request
+curl -X POST http://localhost:8001/bap/caller/select \
+  -H "Content-Type: application/json" \
+  -d @select.json
+```
+
+#### Example: Send On_Discover Response (BPP)
+
+```bash
+# Navigate to BPP message directory
+cd sandbox/docker/kafka/message/bpp/example
+
+# Send on_discover response
+curl -X POST http://localhost:8002/bpp/caller/on_discover \
+  -H "Content-Type: application/json" \
+  -d @on_discover.json
+```
+
+### Adapting Messages for API Testing
+
+Before using the test messages, you may need to update certain fields:
+
+1. **Update `bap_uri`**: Point to your BAP backend service
+   ```json
+   "bap_uri": "http://your-bap-backend:9001"
+   ```
+
+2. **Update `bpp_uri`**: Point to your BPP backend service or ONIX BPP adapter
+   ```json
+   "bpp_uri": "http://onix-bpp-service:8002/bpp/receiver"
+   ```
+
+3. **Update Service Names**: Replace Kafka-specific service names with Kubernetes service names:
+   - `mock-bap-kafka` → `mock-bap-service` (or your actual service name)
+   - `onix-bpp-plugin-kafka` → `onix-bpp-service`
+
+4. **Generate New IDs**: Update `transaction_id` and `message_id` for each request:
+   ```bash
+   # Generate new UUIDs
+   uuidgen  # For transaction_id
+   uuidgen  # For message_id
+   ```
+
+### Quick Test Script
+
+Create a simple test script to send multiple requests:
+
+```bash
+#!/bin/bash
+# test-api.sh
+
+BAP_URL="http://localhost:8001"
+BPP_URL="http://localhost:8002"
+MESSAGE_DIR="sandbox/docker/kafka/message"
+
+# Test BAP discover
+echo "Testing BAP discover..."
+curl -X POST ${BAP_URL}/bap/caller/discover \
+  -H "Content-Type: application/json" \
+  -d @${MESSAGE_DIR}/bap/example/discover-by-station.json
+
+# Test BAP select
+echo "Testing BAP select..."
+curl -X POST ${BAP_URL}/bap/caller/select \
+  -H "Content-Type: application/json" \
+  -d @${MESSAGE_DIR}/bap/example/select.json
+
+# Test BPP on_discover
+echo "Testing BPP on_discover..."
+curl -X POST ${BPP_URL}/bpp/caller/on_discover \
+  -H "Content-Type: application/json" \
+  -d @${MESSAGE_DIR}/bpp/example/on_discover.json
+```
+
+### Testing from Within Kubernetes Cluster
+
+If you want to test from within the cluster (e.g., from a pod):
+
+```bash
+# Create a test pod
+kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- sh
+
+# Inside the pod, test BAP endpoint
+curl -X POST http://onix-bap-service:8001/bap/caller/discover \
+  -H "Content-Type: application/json" \
+  -d '{
+    "context": {
+      "version": "2.0.0",
+      "action": "discover",
+      "domain": "beckn.one:deg:ev-charging",
+      "bap_id": "ev-charging.sandbox1.com",
+      "bap_uri": "http://mock-bap-service:9001",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+      "message_id": "440e8400-e29b-41d4-a716-446655440012",
+      "timestamp": "2025-01-27T10:00:00Z",
+      "ttl": "PT30S"
+    },
+    "message": {
+      "filters": {
+        "type": "jsonpath",
+        "expression": "$[?(@.beckn:id==\"ITEM-BTM-DC60\")]"
+      }
+    }
+  }'
+```
+
+### Testing All Actions
+
+To test all available actions, you can iterate through all JSON files:
+
+```bash
+# Test all BAP caller actions
+# Note: All discover variants use the same endpoint
+for file in sandbox/docker/kafka/message/bap/example/*.json; do
+  filename=$(basename "$file" .json)
+  # Map filename to action endpoint
+  case "$filename" in
+    discover-*) action="discover" ;;
+    select) action="select" ;;
+    init) action="init" ;;
+    confirm) action="confirm" ;;
+    update) action="update" ;;
+    track) action="track" ;;
+    cancel) action="cancel" ;;
+    rating) action="rating" ;;
+    support) action="support" ;;
+    *) echo "Skipping unknown file: $filename"; continue ;;
+  esac
+  echo "Testing: $action (from $filename.json)"
+  curl -X POST "http://localhost:8001/bap/caller/${action}" \
+    -H "Content-Type: application/json" \
+    -d @"$file"
+  echo ""
+done
+
+# Test all BPP caller actions
+for file in sandbox/docker/kafka/message/bpp/example/*.json; do
+  filename=$(basename "$file" .json)
+  # BPP files already have 'on_' prefix, use as-is
+  action="$filename"
+  echo "Testing: $action"
+  curl -X POST "http://localhost:8002/bpp/caller/${action}" \
+    -H "Content-Type: application/json" \
+    -d @"$file"
+  echo ""
+done
+```
+
+### Message Validation
+
+Before sending messages, validate the JSON structure:
+
+```bash
+# Validate JSON syntax
+jq . sandbox/docker/kafka/message/bap/example/discover-by-station.json
+
+# Check required fields
+jq '.context | {action, domain, bap_id, bap_uri, transaction_id, message_id}' \
+  sandbox/docker/kafka/message/bap/example/discover-by-station.json
+```
+
+### Additional Resources
+
+- **Message Documentation**: See `sandbox/docker/kafka/message/bap/README.md` and `sandbox/docker/kafka/message/bpp/README.md` for detailed message documentation
+- **Postman Collections**: Use the Postman collections in `api-collection/postman-collection/` for GUI-based testing
+- **Swagger Documentation**: See `api-collection/swagger/` for API specifications
 
 ## Troubleshooting
 

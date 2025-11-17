@@ -8,31 +8,31 @@ This directory contains pre-formatted JSON messages and bash scripts for testing
 
 **🚀 Publish All Messages** - Automatically publishes all JSON files from `example/` directory:
 ```bash
-cd sandbox/docker/kafka/message/bap/test && ./publish-all.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-all.sh
 ```
 
 **🎯 Publish Specific Action Type:**
 ```bash
 # Publish all discover variants (8 messages routed to topic bap.discover)
-cd sandbox/docker/kafka/message/bap/test && ./publish-all.sh discover
+cd sandbox/helm/kafka/message/bap/test && ./publish-all.sh discover
 
 # Publish a single action family
-cd sandbox/docker/kafka/message/bap/test && ./publish-all.sh select
-cd sandbox/docker/kafka/message/bap/test && ./publish-all.sh cancel
-cd sandbox/docker/kafka/message/bap/test && ./publish-all.sh rating
+cd sandbox/helm/kafka/message/bap/test && ./publish-all.sh select
+cd sandbox/helm/kafka/message/bap/test && ./publish-all.sh cancel
+cd sandbox/helm/kafka/message/bap/test && ./publish-all.sh rating
 ```
 
 **📝 Publish Single Message:**
 ```bash
 # Discover payloads (topic bap.discover)
-cd sandbox/docker/kafka/message/bap/test && ./publish-discover-along-a-route.sh
-cd sandbox/docker/kafka/message/bap/test && ./publish-discover-by-evse.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-discover-along-a-route.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-discover-by-evse.sh
 
 # Transaction payloads (topics bap.select, bap.init, …)
-cd sandbox/docker/kafka/message/bap/test && ./publish-select.sh
-cd sandbox/docker/kafka/message/bap/test && ./publish-init.sh
-cd sandbox/docker/kafka/message/bap/test && ./publish-confirm.sh
-cd sandbox/docker/kafka/message/bap/test && ./publish-track.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-select.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-init.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-confirm.sh
+cd sandbox/helm/kafka/message/bap/test && ./publish-track.sh
 ```
 
 ## Directory Structure
@@ -52,12 +52,16 @@ message/bap/
 Scripts use environment variables for configuration (all optional; sensible defaults are provided):
 
 ```bash
-export KAFKA_HOST=localhost             # Default: localhost
-export KAFKA_PORT=9092                  # Default: 9092
-export KAFKA_BOOTSTRAP=localhost:9092   # Default: $KAFKA_HOST:$KAFKA_PORT
+export KAFKA_HOST=localhost             # Default: localhost (for local Kafka CLI tools)
+export KAFKA_PORT=9092                  # Default: 9092 (for local Kafka CLI tools)
+export KAFKA_BOOTSTRAP=localhost:9092   # Default: $KAFKA_HOST:$KAFKA_PORT (for local Kafka CLI tools)
+export KAFKA_NAMESPACE=ev-charging-sandbox  # Default: ev-charging-sandbox (for Kubernetes)
 ```
-When the sandbox `docker-compose.yml` is running, the helper scripts automatically
-call `kafka-console-producer.sh` inside the `kafka` container via `docker exec`.
+
+The scripts automatically detect the environment and use the appropriate method:
+- **Docker Compose**: If a Docker container named `kafka` is running, scripts use `docker exec`
+- **Kubernetes/Helm**: If `kubectl` is available, scripts use `kubectl exec` to access the Kafka pod
+- **Local Kafka CLI**: If Kafka CLI tools are installed locally, scripts use them directly
 
 ## Message Flow
 
@@ -84,11 +88,18 @@ These scripts act like BAP Backend, publishing requests to `bap.*` topics that a
 - `jq` - For JSON processing
   - Install: `brew install jq` (macOS) or `apt-get install jq` (Linux)
 - `uuidgen` or `python3` - For generating UUIDs (scripts have fallback)
-- Docker with Kafka container running (for docker exec method)
-- OR Kafka CLI tools installed locally
+- **For Kubernetes/Helm deployments:**
+  - `kubectl` configured to access your cluster
+  - Kafka pod running in the cluster (default namespace: `ev-charging-sandbox`)
+- **For Docker Compose deployments:**
+  - Docker with Kafka container running
+- **OR** Kafka CLI tools installed locally
 
 ### Kafka Setup
-- Kafka must be running (via docker-compose)
+- **Kubernetes/Helm**: Kafka must be deployed and running in your cluster
+  - Check: `kubectl get pods -n ev-charging-sandbox -l component=kafka`
+- **Docker Compose**: Kafka container must be running
+  - Check: `docker ps | grep kafka`
 - Topics will be auto-created when first message is published
 - Consumer groups are managed by the ONIX plugins
 
@@ -96,6 +107,17 @@ These scripts act like BAP Backend, publishing requests to `bap.*` topics that a
 
 You can also publish messages directly using Kafka CLI:
 
+**Kubernetes/Helm:**
+```bash
+# Find Kafka pod
+KAFKA_POD=$(kubectl get pod -n ev-charging-sandbox -l component=kafka -o jsonpath='{.items[0].metadata.name}')
+
+# Publish a message to a topic
+cat message.json | kubectl exec -i -n ev-charging-sandbox $KAFKA_POD -- \
+  kafka-console-producer --bootstrap-server localhost:9092 --topic bap.discover
+```
+
+**Docker Compose:**
 ```bash
 # Publish a message to a topic
 docker exec -i kafka kafka-console-producer.sh \
@@ -116,10 +138,29 @@ apt-get install jq
 ```
 
 ### Scripts Fail with "Kafka producer not available"
+
+**For Kubernetes/Helm:**
+- Verify kubectl is configured: `kubectl cluster-info`
+- Check Kafka pod is running: `kubectl get pods -n ev-charging-sandbox -l component=kafka`
+- Verify namespace is correct (set `KAFKA_NAMESPACE` if different from default)
+- Check Kafka pod logs: `kubectl logs -n ev-charging-sandbox -l component=kafka`
+
+**For Docker Compose:**
 - Verify Kafka is running: `docker ps | grep kafka`
 - Check Kafka is accessible: `docker exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092`
 
+**For Local Kafka CLI:**
+- Verify Kafka CLI tools are installed: `which kafka-console-producer`
+- Check Kafka is accessible: `kafka-broker-api-versions --bootstrap-server localhost:9092`
+
 ### Messages Not Being Consumed
+
+**For Kubernetes/Helm:**
+- Check consumer pods are running: `kubectl get pods -n ev-charging-sandbox -l component=bap`
+- Verify topics exist: `kubectl exec -n ev-charging-sandbox $(kubectl get pod -n ev-charging-sandbox -l component=kafka -o jsonpath='{.items[0].metadata.name}') -- kafka-topics --list --bootstrap-server localhost:9092`
+- Check adapter logs: `kubectl logs -n ev-charging-sandbox -l component=bap`
+
+**For Docker Compose:**
 - Check consumer is running: `docker ps | grep onix-bap-plugin-kafka`
 - Verify topics exist: `docker exec kafka kafka-topics.sh --list --bootstrap-server localhost:9092`
 - Check adapter logs: `docker logs onix-bap-plugin-kafka`

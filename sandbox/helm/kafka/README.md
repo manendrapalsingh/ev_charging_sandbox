@@ -22,6 +22,121 @@ This setup creates a fully functional sandbox environment for testing and develo
 
 ## Quick Start
 
+### Deploy Complete Sandbox Environment (All Services)
+
+Deploy the complete Kafka sandbox environment with all services (BAP, BPP, Kafka, and all mock services) in one go:
+
+**🚀 Quick Deploy - All Services**
+
+**Option 1: Using the Deployment Script (Recommended)**
+
+The easiest way to deploy all services is using the provided script:
+
+```bash
+# Run from sandbox/helm/kafka directory
+cd sandbox/helm/kafka
+./deploy-all.sh
+```
+
+The script automatically:
+- Verifies all paths exist
+- Creates the namespace if needed
+- Deploys all services (BAP, BPP, Kafka, and mock services)
+- Populates schemas
+- Shows deployment status
+
+**Option 2: Manual Deployment**
+
+**IMPORTANT**: You must run these commands from the `sandbox/helm/kafka` directory.
+
+```bash
+# Navigate to sandbox directory (from project root)
+cd sandbox/helm/kafka
+
+# Verify you're in the right directory (should see values-sandbox.yaml)
+pwd
+# Should output: .../ev_charging_sandbox/sandbox/helm/kafka
+ls values-sandbox.yaml
+
+# Deploy all services (BAP, BPP, and mock services)
+helm upgrade --install ev-charging-kafka-bap ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace && \
+helm upgrade --install ev-charging-kafka-bpp ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-registry ../../mock-registry \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-cds ../../mock-cds \
+  --namespace ev-charging-sandbox
+
+# Populate schemas (required for validation)
+./populate-schemas.sh
+
+# Check deployment status
+kubectl get pods -n ev-charging-sandbox
+kubectl get svc -n ev-charging-sandbox
+
+# Watch pod status (optional)
+watch -n 2 'kubectl get pods -n ev-charging-sandbox'
+```
+
+**Alternative: Using Absolute Paths**
+
+If you prefer to use absolute paths or run from a different directory:
+
+```bash
+# Get the project root directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
+
+# Deploy all services using absolute paths
+helm upgrade --install ev-charging-kafka-bap ${PROJECT_ROOT}/helm/kafka \
+  -f ${PROJECT_ROOT}/helm/kafka/values-bap.yaml \
+  -f ${PROJECT_ROOT}/sandbox/helm/kafka/values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace && \
+helm upgrade --install ev-charging-kafka-bpp ${PROJECT_ROOT}/helm/kafka \
+  -f ${PROJECT_ROOT}/helm/kafka/values-bpp.yaml \
+  -f ${PROJECT_ROOT}/sandbox/helm/kafka/values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-registry ${PROJECT_ROOT}/sandbox/mock-registry \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-cds ${PROJECT_ROOT}/sandbox/mock-cds \
+  --namespace ev-charging-sandbox
+```
+
+**Troubleshooting Path Issues**
+
+If you get "path not found" errors:
+
+1. **Verify you're in the correct directory**:
+   ```bash
+   pwd
+   # Should end with: .../ev_charging_sandbox/sandbox/helm/kafka
+   ```
+
+2. **Check the paths exist**:
+   ```bash
+   ls -d ../../../helm/kafka
+   ls -d ../../mock-registry
+   ```
+
+3. **Use absolute paths** (see Alternative method above)
+
+4. **Or navigate from project root**:
+   ```bash
+   # From project root
+   cd sandbox/helm/kafka
+   # Then run the helm commands
+   ```
+
 ### Deploy BAP Component
 
 ```bash
@@ -139,9 +254,14 @@ kubectl get svc -n ev-charging-sandbox
 kubectl logs -n ev-charging-sandbox <pod-name>
 ```
 
-### Deploy All Services Together
+### Deploy All Services Together (Alternative Section)
+
+This section provides an alternative way to deploy all services. See the [Deploy Complete Sandbox Environment](#deploy-complete-sandbox-environment-all-services) section above for the recommended approach.
 
 ```bash
+# Navigate to sandbox/helm/kafka directory
+cd sandbox/helm/kafka
+
 # Deploy BAP (idempotent - installs or upgrades)
 helm upgrade --install ev-charging-kafka-bap ../../../helm/kafka \
   -f ../../../helm/kafka/values-bap.yaml \
@@ -158,8 +278,19 @@ helm upgrade --install ev-charging-kafka-bpp ../../../helm/kafka \
   --namespace ev-charging-sandbox \
   --create-namespace
 
-# Note: Mock services configuration is included in values-sandbox.yaml
-# You may need to deploy mock services separately if not included in the chart
+# Deploy Mock Registry
+helm upgrade --install mock-registry ../../mock-registry \
+  --namespace ev-charging-sandbox
+
+# Deploy Mock CDS
+helm upgrade --install mock-cds ../../mock-cds \
+  --namespace ev-charging-sandbox
+
+# Populate schemas
+./populate-schemas.sh
+
+# Note: Mock BAP-Kafka and Mock BPP-Kafka services are configured via values-sandbox.yaml
+# and may be deployed as part of the Kafka Helm chart if the chart supports it.
 ```
 
 ### Installing Multiple Instances

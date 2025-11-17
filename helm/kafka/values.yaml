@@ -23,6 +23,9 @@ service:
 # Kafka configuration (KRaft mode - no Zookeeper)
 kafka:
   enabled: true
+  # Kafka broker address - if not set, defaults to <release-name>-onix-kafka-kafka:<port>
+  # Set this if you want to use a different Kafka service name or external Kafka
+  broker: ""  # If empty, will default based on kafka.enabled and release name
   image:
     repository: confluentinc/cp-kafka
     tag: "7.5.0"
@@ -48,11 +51,16 @@ kafka:
 kraft:
   enabled: true
   nodeId: 1
+  clusterId: MkU3OEVBNTcwNTJENDM2Qk
   # controllerQuorumVoters will be set dynamically in template using service name
 
 # Redis configuration
 redis:
   enabled: true
+  # Hostname for Redis service - if not set, defaults to <release-name>-onix-kafka-redis-<component>
+  # This is used in the adapter configuration
+  # Set this if you want to use a different Redis service name or external Redis
+  host: ""  # If empty, will default to <release-name>-onix-kafka-redis-<component>
   image:
     repository: redis
     tag: alpine
@@ -397,4 +405,58 @@ podAnnotations: {}
 
 # Service annotations
 serviceAnnotations: {}
+
+# Mock services configuration (optional - for sandbox environments)
+mockServices:
+  enabled: false
+  registry:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-registry
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 3030
+    config: ""
+  cds:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-cds
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8082
+    config: ""
+  bapKafka:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-bap-kafka
+      tag: latest
+    config: ""
+    defaults:
+      version: ""
+      country_code: ""
+      city_code: ""
+      subscriber_id: ""
+  bppKafka:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-bpp-kafka
+      tag: latest
+    config: ""
+    defaults:
+      version: ""
+      country_code: ""
+      city_code: ""
+      subscriber_id: ""
+
+# Kafka UI configuration (optional)
+kafkaUI:
+  enabled: false
+  image:
+    repository: provectuslabs/kafka-ui
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 8080
 

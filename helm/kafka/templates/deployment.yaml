@@ -21,6 +21,50 @@ spec:
         {{- include "onix-kafka.selectorLabels" . | nindent 8 }}
         component: {{ .Values.component }}
     spec:
+      initContainers:
+      - name: setup-schemas
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Setting up schema directory structure..."
+          mkdir -p /app/schemas/beckn.one_deg_ev-charging/v2.0.0
+          # Copy schema files from ConfigMap to correct directory structure
+          # ConfigMap files are mounted at /schemas-source
+          # Handle Kubernetes ConfigMap symlinks by following ..data symlink
+          if [ -d "/schemas-source" ]; then
+            echo "Found /schemas-source directory"
+            # Use ..data symlink which points to the actual data directory
+            SCHEMA_SOURCE="/schemas-source"
+            if [ -L "/schemas-source/..data" ]; then
+              SCHEMA_SOURCE="/schemas-source/..data"
+              echo "Using symlink: $SCHEMA_SOURCE"
+            fi
+            echo "Listing files in $SCHEMA_SOURCE:"
+            ls -la "$SCHEMA_SOURCE" | head -10
+            # Find all JSON files (excluding Kubernetes metadata files)
+            # Use a more robust approach that works in busybox
+            COUNT=0
+            for file in "$SCHEMA_SOURCE"/*.json; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                cp "$file" "/app/schemas/beckn.one_deg_ev-charging/v2.0.0/$filename"
+                echo "Copied: $filename"
+                COUNT=$((COUNT + 1))
+              fi
+            done
+            echo "Schema files copied successfully: $COUNT files"
+            ls -la /app/schemas/beckn.one_deg_ev-charging/v2.0.0/ | head -10
+          else
+            echo "Warning: /schemas-source not found, skipping schema setup"
+          fi
+        volumeMounts:
+        - name: schemas-source
+          mountPath: /schemas-source
+          readOnly: true
+        - name: schemas
+          mountPath: /app/schemas
       containers:
       - name: {{ .Values.component }}-plugin-kafka
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -71,9 +115,11 @@ spec:
       - name: config
         configMap:
           name: {{ include "onix-kafka.fullname" . }}-{{ .Values.component }}-config
-      - name: schemas
+      - name: schemas-source
         configMap:
           name: {{ include "onix-kafka.fullname" . }}-schemas
+      - name: schemas
+        emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

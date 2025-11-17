@@ -26,18 +26,43 @@ The architecture includes:
 
 ## Quick Start
 
-### Deploy Complete Sandbox Environment (One Command)
+### Deploy Complete Sandbox Environment (All Services)
 
-Deploy BAP, BPP, and all mock services in one go:
+Deploy the complete sandbox environment with all services (BAP, BPP, and all mock services) in one go:
 
-**Deploy from sandbox/helm/api/monolithic directory**
+**🚀 Quick Deploy - All Services**
+
+**Option 1: Using the Deployment Script (Recommended)**
+
+The easiest way to deploy all services is using the provided script:
 
 ```bash
-# IMPORTANT: Run from sandbox/helm/api/monolithic directory
+# Run from any directory
+cd sandbox/helm/api/monolithic
+./deploy-all.sh
+```
+
+The script automatically:
+- Verifies all paths exist
+- Creates the namespace if needed
+- Deploys all services (BAP, BPP, and mock services)
+- Populates schemas
+- Shows deployment status
+
+**Option 2: Manual Deployment**
+
+**IMPORTANT**: You must run these commands from the `sandbox/helm/api/monolithic` directory.
+
+```bash
+# Navigate to sandbox directory (from project root)
+cd sandbox/helm/api/monolithic
+
 # Verify you're in the right directory (should see values-sandbox.yaml)
+pwd
+# Should output: .../ev_charging_sandbox/sandbox/helm/api/monolithic
 ls values-sandbox.yaml
 
-# Deploy BAP and BPP adapters
+# Deploy all services (BAP, BPP, and mock services)
 helm upgrade --install ev-charging-bap ../../../../helm/api/monolithic \
   -f ../../../../helm/api/monolithic/values-bap.yaml \
   -f values-sandbox.yaml \
@@ -48,9 +73,7 @@ helm upgrade --install ev-charging-bpp ../../../../helm/api/monolithic \
   -f ../../../../helm/api/monolithic/values-bpp.yaml \
   -f values-sandbox.yaml \
   --set component=bpp \
-  --namespace ev-charging-sandbox
-
-# Deploy all mock services
+  --namespace ev-charging-sandbox && \
 helm upgrade --install mock-registry ../../../mock-registry \
   --namespace ev-charging-sandbox && \
 helm upgrade --install mock-cds ../../../mock-cds \
@@ -60,6 +83,9 @@ helm upgrade --install mock-bap ../../../mock-bap \
 helm upgrade --install mock-bpp ../../../mock-bpp \
   --namespace ev-charging-sandbox
 
+# Populate schemas (required for validation)
+./populate-schemas.sh
+
 # Check deployment status
 kubectl get pods -n ev-charging-sandbox
 kubectl get svc -n ev-charging-sandbox
@@ -67,6 +93,165 @@ kubectl get svc -n ev-charging-sandbox
 # Watch pod status (optional)
 watch -n 2 'kubectl get pods -n ev-charging-sandbox'
 ```
+
+**Alternative: Using Absolute Paths**
+
+If you prefer to use absolute paths or run from a different directory:
+
+```bash
+# Get the project root directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
+
+# Deploy all services using absolute paths
+helm upgrade --install ev-charging-bap ${PROJECT_ROOT}/helm/api/monolithic \
+  -f ${PROJECT_ROOT}/helm/api/monolithic/values-bap.yaml \
+  -f ${PROJECT_ROOT}/sandbox/helm/api/monolithic/values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace && \
+helm upgrade --install ev-charging-bpp ${PROJECT_ROOT}/helm/api/monolithic \
+  -f ${PROJECT_ROOT}/helm/api/monolithic/values-bpp.yaml \
+  -f ${PROJECT_ROOT}/sandbox/helm/api/monolithic/values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-registry ${PROJECT_ROOT}/sandbox/mock-registry \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-cds ${PROJECT_ROOT}/sandbox/mock-cds \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-bap ${PROJECT_ROOT}/sandbox/mock-bap \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-bpp ${PROJECT_ROOT}/sandbox/mock-bpp \
+  --namespace ev-charging-sandbox
+```
+
+**📋 Step-by-Step Deployment**
+
+**IMPORTANT**: Run these commands from the `sandbox/helm/api/monolithic` directory.
+
+```bash
+# Navigate to the correct directory
+cd sandbox/helm/api/monolithic
+
+# 1. Create namespace
+kubectl create namespace ev-charging-sandbox
+
+# 2. Deploy BAP adapter
+helm upgrade --install ev-charging-bap ../../../../helm/api/monolithic \
+  -f ../../../../helm/api/monolithic/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox
+
+# 3. Deploy BPP adapter
+helm upgrade --install ev-charging-bpp ../../../../helm/api/monolithic \
+  -f ../../../../helm/api/monolithic/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox
+
+# 4. Deploy Mock Registry
+helm upgrade --install mock-registry ../../../mock-registry \
+  --namespace ev-charging-sandbox
+
+# 5. Deploy Mock CDS
+helm upgrade --install mock-cds ../../../mock-cds \
+  --namespace ev-charging-sandbox
+
+# 6. Deploy Mock BAP
+helm upgrade --install mock-bap ../../../mock-bap \
+  --namespace ev-charging-sandbox
+
+# 7. Deploy Mock BPP
+helm upgrade --install mock-bpp ../../../mock-bpp \
+  --namespace ev-charging-sandbox
+
+# 8. Populate schemas
+./populate-schemas.sh
+
+# 9. Verify all services are running
+kubectl get pods -n ev-charging-sandbox
+kubectl get svc -n ev-charging-sandbox
+```
+
+**Troubleshooting Path Issues**
+
+If you get "path not found" errors:
+
+1. **Verify you're in the correct directory**:
+   ```bash
+   pwd
+   # Should end with: .../ev_charging_sandbox/sandbox/helm/api/monolithic
+   ```
+
+2. **Check the paths exist**:
+   ```bash
+   ls -d ../../../../helm/api/monolithic
+   ls -d ../../../mock-registry
+   ```
+
+3. **Use absolute paths** (see Alternative method above)
+
+4. **Or navigate from project root**:
+   ```bash
+   # From project root
+   cd sandbox/helm/api/monolithic
+   # Then run the helm commands
+   ```
+
+**✅ Verify All Services Are Running**
+
+```bash
+# Check all pods are ready
+kubectl get pods -n ev-charging-sandbox
+
+# Expected output should show:
+# - ev-charging-bap-* (BAP adapter)
+# - ev-charging-bpp-* (BPP adapter)
+# - mock-registry-* (Registry service)
+# - mock-cds-* (CDS service)
+# - mock-bap-* (Mock BAP backend)
+# - mock-bpp-* (Mock BPP backend)
+# - redis-* (Redis instances)
+
+# Check all services
+kubectl get svc -n ev-charging-sandbox
+
+# Check pod logs if any are not ready
+kubectl logs -n ev-charging-sandbox <pod-name>
+```
+
+**🔌 Port Forward All Services (Optional)**
+
+If services are ClusterIP type, use port forwarding to access them locally:
+
+```bash
+# Use the provided port-forward script
+./port-forward.sh
+
+# Or manually port forward each service:
+kubectl port-forward -n ev-charging-sandbox svc/ev-charging-bap-onix-api-monolithic-bap-service 8001:8001 &
+kubectl port-forward -n ev-charging-sandbox svc/ev-charging-bpp-onix-api-monolithic-bpp-service 8002:8002 &
+kubectl port-forward -n ev-charging-sandbox svc/ev-charging-mock-registry 3030:3030 &
+kubectl port-forward -n ev-charging-sandbox svc/ev-charging-mock-cds 8082:8082 &
+kubectl port-forward -n ev-charging-sandbox svc/ev-charging-mock-bap 9001:9001 &
+kubectl port-forward -n ev-charging-sandbox svc/ev-charging-mock-bpp 9002:9002 &
+```
+
+**🧪 Test the Deployment**
+
+Once all services are running, test with the provided test messages:
+
+```bash
+# Test BAP endpoints
+cd message/bap/test
+./test-all.sh discover
+
+# Test BPP endpoints
+cd ../bpp/test
+./test-on-discover.sh
+```
+
+See the [Testing with Sample Messages](#testing-with-sample-messages) section for more details.
 
 ### Deploy BAP Component
 
@@ -272,52 +457,57 @@ helm install ev-charging-bap-2 ../../../../helm/api/monolithic \
 # Each instance will have different service names and can run on different ports
 ```
 
-## Services
+## Services Deployed
 
-### Core Services
+When you deploy the complete sandbox environment, the following services are created:
 
-1. **ev-charging-redis-onix-bap** (Port: 6379)
-   - Redis cache for the BAP adapter
-   - Used for storing transaction state, caching registry lookups, and session management
+### ONIX Adapters
 
-2. **ev-charging-redis-onix-bpp** (Port: 6380)
-   - Redis cache for the BPP adapter
-   - Used for storing transaction state, caching registry lookups, and session management
-
-3. **ev-charging-bap-onix-api-monolithic-bap-service** (Port: 8001)
+1. **ev-charging-bap-onix-api-monolithic-bap-service** (Port: 8001)
    - ONIX protocol adapter for BAP (Buyer App Provider)
    - Handles protocol compliance, signing, validation, and routing for BAP transactions
-   - **Caller Endpoint**: `/bap/caller/` - Entry point for requests from BAP application
-   - **Receiver Endpoint**: `/bap/receiver/` - Receives callbacks from CDS and BPPs
+   - **Caller Endpoint**: `/bap/caller/{action}` - Entry point for requests from BAP application
+   - **Receiver Endpoint**: `/bap/receiver/{action}` - Receives callbacks from CDS and BPPs
 
-4. **ev-charging-bpp-onix-api-monolithic-bpp-service** (Port: 8002)
+2. **ev-charging-bpp-onix-api-monolithic-bpp-service** (Port: 8002)
    - ONIX protocol adapter for BPP (Buyer Platform Provider)
    - Handles protocol compliance, signing, validation, and routing for BPP transactions
-   - **Caller Endpoint**: `/bpp/caller/` - Sends responses to CDS and BAPs
-   - **Receiver Endpoint**: `/bpp/receiver/` - Receives requests from CDS and BAPs
+   - **Caller Endpoint**: `/bpp/caller/{action}` - Sends responses to CDS and BAPs
+   - **Receiver Endpoint**: `/bpp/receiver/{action}` - Receives requests from CDS and BAPs
 
 ### Mock Services
 
-5. **ev-charging-mock-registry** (Port: 3030)
+3. **ev-charging-mock-registry** (Port: 3030)
    - Mock implementation of the network registry service
    - Maintains a registry of all BAPs, BPPs, and CDS services on the network
    - Provides subscriber lookup and key management functionality
 
-6. **ev-charging-mock-cds** (Port: 8082)
+4. **ev-charging-mock-cds** (Port: 8082)
    - Mock Catalog Discovery Service (CDS)
    - Aggregates discover requests from BAPs and broadcasts to registered BPPs
    - Collects and aggregates responses from multiple BPPs
    - Handles signature verification and signing
 
-7. **ev-charging-mock-bap** (Port: 9001)
+5. **ev-charging-mock-bap** (Port: 9001)
    - Single mock BAP backend service handling all endpoints
    - Simulates a Buyer App Provider application
    - Receives all callbacks from the ONIX adapter (on_discover, on_select, on_init, etc.)
 
-8. **ev-charging-mock-bpp** (Port: 9002)
+6. **ev-charging-mock-bpp** (Port: 9002)
    - Single mock BPP backend service handling all endpoints
    - Simulates a Buyer Platform Provider application
    - Handles all requests from the ONIX adapter (discover, select, init, confirm, etc.)
+
+### Supporting Services
+
+7. **ev-charging-redis-onix-bap** (Port: 6379)
+   - Redis cache for the BAP adapter
+   - Used for storing transaction state, caching registry lookups, and session management
+
+8. **ev-charging-redis-onix-bpp** (Port: 6380)
+   - Redis cache for the BPP adapter
+   - Used for storing transaction state, caching registry lookups, and session management
+
 
 ## Configuration Files
 
@@ -697,6 +887,34 @@ kubectl get configmap ev-charging-bpp-onix-api-monolithic-bpp-adapter -n ev-char
 
 ## Uninstalling
 
+### Uninstall All Services
+
+To remove the complete sandbox environment:
+
+```bash
+# Uninstall all services from namespace
+helm uninstall ev-charging-bap --namespace ev-charging-sandbox
+helm uninstall ev-charging-bpp --namespace ev-charging-sandbox
+helm uninstall mock-registry --namespace ev-charging-sandbox
+helm uninstall mock-cds --namespace ev-charging-sandbox
+helm uninstall mock-bap --namespace ev-charging-sandbox
+helm uninstall mock-bpp --namespace ev-charging-sandbox
+
+# Or uninstall all in one command
+helm uninstall ev-charging-bap ev-charging-bpp mock-registry mock-cds mock-bap mock-bpp \
+  --namespace ev-charging-sandbox
+
+# Remove namespace (optional - removes all resources in namespace)
+kubectl delete namespace ev-charging-sandbox
+
+# Or remove specific resources (if not deleting namespace)
+kubectl delete all -n ev-charging-sandbox -l app.kubernetes.io/name=onix-api-monolithic
+kubectl delete configmap -n ev-charging-sandbox -l app.kubernetes.io/name=onix-api-monolithic
+kubectl delete pvc -n ev-charging-sandbox -l app.kubernetes.io/name=onix-api-monolithic
+```
+
+### Uninstall Individual Services
+
 ```bash
 # Uninstall BAP (default namespace)
 helm uninstall ev-charging-bap
@@ -708,7 +926,13 @@ helm uninstall ev-charging-bpp
 helm uninstall ev-charging-bap --namespace ev-charging-sandbox
 helm uninstall ev-charging-bpp --namespace ev-charging-sandbox
 
-# Remove all resources (if needed)
+# Uninstall mock services
+helm uninstall mock-registry --namespace ev-charging-sandbox
+helm uninstall mock-cds --namespace ev-charging-sandbox
+helm uninstall mock-bap --namespace ev-charging-sandbox
+helm uninstall mock-bpp --namespace ev-charging-sandbox
+
+# Remove associated resources (if needed)
 kubectl delete all -l app.kubernetes.io/name=onix-api-monolithic
 kubectl delete all -n ev-charging-sandbox -l app.kubernetes.io/name=onix-api-monolithic  # If using namespace
 ```
