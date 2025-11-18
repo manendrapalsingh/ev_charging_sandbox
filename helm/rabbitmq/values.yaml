@@ -5,6 +5,12 @@
 appName: onix-ev-charging
 component: bap  # bap or bpp
 
+# Service URLs for routing
+# These are used when targetType is "bpp" or "bap" in routing configuration
+serviceUrls:
+  bpp: "http://ev-charging-rabbitmq-bpp-onix-rabbitmq-bpp-service:8002"
+  bap: "http://ev-charging-rabbitmq-bap-onix-rabbitmq-bap-service:8001"
+
 # Image configuration
 image:
   repository: manendrapalsingh/onix-bap-plugin-rabbit-mq
@@ -21,6 +27,7 @@ service:
   targetPort: 8001
 
 # RabbitMQ configuration
+# RabbitMQ is a required dependency for ONIX RabbitMQ adapters
 rabbitmq:
   enabled: true
   image:
@@ -44,6 +51,7 @@ rabbitmq:
     storageClass: ""
 
 # Redis configuration
+# Redis is a required dependency for ONIX RabbitMQ adapters
 redis:
   enabled: true
   image:
@@ -87,6 +95,40 @@ env:
     value: admin
   - name: RABBITMQ_PASSWORD
     value: admin
+
+# Retry configuration
+retry:
+  # Maximum number of retry attempts for various operations
+  maxRetries: 3
+  # Registry plugin retry configuration
+  registry:
+    maxRetries: 3
+    waitMin: "100ms"
+    waitMax: "500ms"
+  # RabbitMQ retry configuration
+  rabbitmq:
+    # Connection retry configuration
+    # Used when establishing connection to RabbitMQ broker
+    connection:
+      maxRetries: 3
+      retryDelay: "1s"
+      initialDelay: "100ms"
+    # Consumer retry configuration (for message processing failures)
+    # When a message processing fails, it will be NACKed and requeued
+    # This controls how many times a message can be retried before being sent to DLQ
+    consumer:
+      maxRetries: 3
+      retryDelay: "1s"
+      # Requeue failed messages (true) or send to dead letter queue (false)
+      # Note: RabbitMQ consumer uses autoAck: false with manual acknowledgment
+      # Failed messages are NACKed with requeue=true for retry
+      requeue: true
+    # Publisher retry configuration (for publish failures)
+    # Used when publishing messages to RabbitMQ exchange fails
+    publisher:
+      maxRetries: 3
+      retryDelay: "1s"
+      initialDelay: "100ms"
 
 # Configuration files
 config:
@@ -272,8 +314,10 @@ config:
       
         - domain: beckn.one:deg:ev-charging
           version: "2.0.0"
-          targetType: bpp
-          target: {}
+          targetType: url
+          target:
+            url: http://ev-charging-rabbitmq-bpp-onix-rabbitmq-bpp-service:8002/bpp/receiver/
+            excludeAction: false
           endpoints:
             - select
             - init
@@ -383,4 +427,49 @@ podAnnotations: {}
 
 # Service annotations
 serviceAnnotations: {}
+
+# Mock services configuration
+# Note: Mock services are deployed via sandbox chart, not here
+mockServices:
+  enabled: false
+  registry:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-registry
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 3030
+    config: ""
+  cds:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-cds
+      tag: latest
+    service:
+      type: ClusterIP
+      port: 8082
+    config: ""
+  bapRabbitMQ:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-bap-rabbit-mq
+      tag: latest
+    config: ""
+    defaults:
+      version: "2.0.0"
+      country_code: "IND"
+      city_code: "std:080"
+      subscriber_id: "ev-charging.sandbox1.com"
+  bppRabbitMQ:
+    enabled: false
+    image:
+      repository: manendrapalsingh/mock-bpp-rabbit-mq
+      tag: latest
+    config: ""
+    defaults:
+      version: "2.0.0"
+      country_code: "IND"
+      city_code: "std:080"
+      subscriber_id: "ev-charging.sandbox2.com"
 

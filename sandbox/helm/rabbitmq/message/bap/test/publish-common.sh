@@ -4,8 +4,8 @@
 
 RABBITMQ_HOST="${RABBITMQ_HOST:-localhost}"
 RABBITMQ_PORT="${RABBITMQ_PORT:-15672}"
-RABBITMQ_USER="${RABBITMQ_USER:-guest}"
-RABBITMQ_PASS="${RABBITMQ_PASS:-guest}"
+RABBITMQ_USER="${RABBITMQ_USER:-admin}"
+RABBITMQ_PASS="${RABBITMQ_PASS:-admin}"
 EXCHANGE="${EXCHANGE:-beckn_exchange}"
 
 # Colors for output
@@ -31,6 +31,8 @@ publish_message() {
   local routing_key=$1
   local json_file=$2
   local description=$3
+  local MAX_RETRIES=3
+  local retry_count=0
   
   if [ ! -f "$json_file" ]; then
     echo -e "${RED}✗ File not found: $json_file${NC}"
@@ -78,21 +80,33 @@ publish_message() {
       "payload_encoding": "string"
     }')
   
-  local response=$(curl -s -u "${RABBITMQ_USER}:${RABBITMQ_PASS}" \
-    -H "Content-Type: application/json" \
-    -X POST \
-    "http://${RABBITMQ_HOST}:${RABBITMQ_PORT}/api/exchanges/%2F/${EXCHANGE}/publish" \
-    -d "$request_json")
+  # Retry loop
+  while [ $retry_count -lt $MAX_RETRIES ]; do
+    retry_count=$((retry_count + 1))
+    local response=$(curl -s -u "${RABBITMQ_USER}:${RABBITMQ_PASS}" \
+      -H "Content-Type: application/json" \
+      -X POST \
+      "http://${RABBITMQ_HOST}:${RABBITMQ_PORT}/api/exchanges/%2F/${EXCHANGE}/publish" \
+      -d "$request_json")
+    
+    if echo "$response" | grep -q '"routed":true'; then
+      echo -e "${GREEN}  ✓ Published successfully!${NC}"
+      echo ""
+      return 0
+    else
+      if [ $retry_count -lt $MAX_RETRIES ]; then
+        echo -e "${YELLOW}  ⚠ Failed to publish (attempt $retry_count/$MAX_RETRIES), retrying...${NC}"
+        sleep 1
+      else
+        echo -e "${RED}  ✗ Failed to publish after $MAX_RETRIES attempts${NC}"
+        echo "  Response: $response"
+        echo ""
+        return 1
+      fi
+    fi
+  done
   
-  if echo "$response" | grep -q '"routed":true'; then
-    echo -e "${GREEN}  ✓ Published successfully!${NC}"
-    echo ""
-    return 0
-  else
-    echo -e "${RED}  ✗ Failed to publish${NC}"
-    echo "  Response: $response"
-    echo ""
-    return 1
-  fi
+  # Should never reach here, but just in case
+  return 1
 }
 

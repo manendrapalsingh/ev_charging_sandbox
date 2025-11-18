@@ -1,6 +1,9 @@
 # BAP-specific values for onix-rabbitmq
 component: bap
 
+# Replica count - ensure only 1 pod
+replicaCount: 1
+
 image:
   repository: manendrapalsingh/onix-bap-plugin-rabbit-mq
   tag: latest
@@ -15,8 +18,6 @@ redis:
     port: 6379
 
 env:
-  - name: CONFIG_FILE
-    value: /app/config/message-baised/rabbit-mq/onix-bap/adapter.yaml
   - name: RABBITMQ_USERNAME
     value: admin
   - name: RABBITMQ_PASSWORD

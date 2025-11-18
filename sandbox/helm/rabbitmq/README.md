@@ -8,9 +8,8 @@ This setup creates a fully functional sandbox environment for testing and develo
 
 - **ONIX RabbitMQ Adapters**: Protocol adapters for BAP (Buyer App Provider) and BPP (Buyer Platform Provider) that consume and publish messages via RabbitMQ
 - **Mock Services**: Simulated services for testing without real implementations
-- **RabbitMQ Message Broker**: Central message broker for asynchronous communication
+- **RabbitMQ Message Broker**: Central message broker for asynchronous communication with Management UI
 - **Supporting Services**: Redis for caching and state management
-- **RabbitMQ Management UI**: Web UI for managing and monitoring RabbitMQ
 
 ## Prerequisites
 
@@ -18,8 +17,107 @@ This setup creates a fully functional sandbox environment for testing and develo
 - Helm 3.x installed
 - kubectl configured to access your cluster
 - Access to Docker images (pulled automatically from Docker Hub)
+- Sufficient cluster resources for RabbitMQ (recommended: 512MB+ memory per node)
 
 ## Quick Start
+
+### Deploy Complete Sandbox Environment (All Services)
+
+Deploy the complete RabbitMQ sandbox environment with all services (BAP, BPP, RabbitMQ, and all mock services) in one go:
+
+**🚀 Quick Deploy - All Services**
+
+**Option 1: Manual Deployment**
+
+**IMPORTANT**: You must run these commands from the `sandbox/helm/rabbitmq` directory.
+
+```bash
+# Navigate to sandbox directory (from project root)
+cd sandbox/helm/rabbitmq
+
+# Verify you're in the right directory (should see values-sandbox.yaml)
+pwd
+# Should output: .../ev_charging_sandbox/sandbox/helm/rabbitmq
+ls values-sandbox.yaml
+
+# Deploy all services (BAP, BPP, and mock services)
+helm upgrade --install ev-charging-rabbitmq-bap ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace && \
+helm upgrade --install ev-charging-rabbitmq-bpp ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-registry ../../mock-registry \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-cds ../../mock-cds \
+  --namespace ev-charging-sandbox
+
+# Populate schemas (required for validation)
+./populate-schemas.sh
+
+# Check deployment status
+kubectl get pods -n ev-charging-sandbox
+kubectl get svc -n ev-charging-sandbox
+
+# Watch pod status (optional)
+watch -n 2 'kubectl get pods -n ev-charging-sandbox'
+```
+
+**Option 2: Using Absolute Paths**
+
+If you prefer to use absolute paths or run from a different directory:
+
+```bash
+# Get the project root directory
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
+
+# Deploy all services using absolute paths
+helm upgrade --install ev-charging-rabbitmq-bap ${PROJECT_ROOT}/helm/rabbitmq \
+  -f ${PROJECT_ROOT}/helm/rabbitmq/values-bap.yaml \
+  -f ${PROJECT_ROOT}/sandbox/helm/rabbitmq/values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace && \
+helm upgrade --install ev-charging-rabbitmq-bpp ${PROJECT_ROOT}/helm/rabbitmq \
+  -f ${PROJECT_ROOT}/helm/rabbitmq/values-bpp.yaml \
+  -f ${PROJECT_ROOT}/sandbox/helm/rabbitmq/values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-registry ${PROJECT_ROOT}/sandbox/mock-registry \
+  --namespace ev-charging-sandbox && \
+helm upgrade --install mock-cds ${PROJECT_ROOT}/sandbox/mock-cds \
+  --namespace ev-charging-sandbox
+```
+
+**Troubleshooting Path Issues**
+
+If you get "path not found" errors:
+
+1. **Verify you're in the correct directory**:
+   ```bash
+   pwd
+   # Should end with: .../ev_charging_sandbox/sandbox/helm/rabbitmq
+   ```
+
+2. **Check the paths exist**:
+   ```bash
+   ls -d ../../../helm/rabbitmq
+   ls -d ../../mock-registry
+   ```
+
+3. **Use absolute paths** (see Option 2 above)
+
+4. **Or navigate from project root**:
+   ```bash
+   # From project root
+   cd sandbox/helm/rabbitmq
+   # Then run the helm commands
+   ```
 
 ### Deploy BAP Component
 
@@ -138,9 +236,14 @@ kubectl get svc -n ev-charging-sandbox
 kubectl logs -n ev-charging-sandbox <pod-name>
 ```
 
-### Deploy All Services Together
+### Deploy All Services Together (Alternative Section)
+
+This section provides an alternative way to deploy all services. See the [Deploy Complete Sandbox Environment](#deploy-complete-sandbox-environment-all-services) section above for the recommended approach.
 
 ```bash
+# Navigate to sandbox/helm/rabbitmq directory
+cd sandbox/helm/rabbitmq
+
 # Deploy BAP (idempotent - installs or upgrades)
 helm upgrade --install ev-charging-rabbitmq-bap ../../../helm/rabbitmq \
   -f ../../../helm/rabbitmq/values-bap.yaml \
@@ -157,8 +260,19 @@ helm upgrade --install ev-charging-rabbitmq-bpp ../../../helm/rabbitmq \
   --namespace ev-charging-sandbox \
   --create-namespace
 
-# Note: Mock services configuration is included in values-sandbox.yaml
-# You may need to deploy mock services separately if not included in the chart
+# Deploy Mock Registry
+helm upgrade --install mock-registry ../../mock-registry \
+  --namespace ev-charging-sandbox
+
+# Deploy Mock CDS
+helm upgrade --install mock-cds ../../mock-cds \
+  --namespace ev-charging-sandbox
+
+# Populate schemas
+./populate-schemas.sh
+
+# Note: Mock BAP-RabbitMQ and Mock BPP-RabbitMQ services are configured via values-sandbox.yaml
+# and may be deployed as part of the RabbitMQ Helm chart if the chart supports it.
 ```
 
 ### Installing Multiple Instances
@@ -191,13 +305,13 @@ helm install ev-charging-rabbitmq-bap-2 ../../../helm/rabbitmq \
 1. **rabbitmq** (Ports: 5672 AMQP, 15672 Management UI)
    - RabbitMQ message broker for asynchronous communication
    - Used for message routing between adapters and mock services
-   - Management UI available at port 15672 (guest/guest)
+   - Management UI available at port 15672 (admin/admin)
 
 2. **redis-bap** (Port: 6379)
    - Redis cache for the BAP adapter
    - Used for storing transaction state, caching registry lookups, and session management
 
-3. **redis-bpp** (Port: 6380)
+3. **redis-bpp** (Port: 6379)
    - Redis cache for the BPP adapter
    - Used for storing transaction state, caching registry lookups, and session management
 
@@ -229,14 +343,14 @@ helm install ev-charging-rabbitmq-bap-2 ../../../helm/rabbitmq \
    - Collects and aggregates responses from multiple BPPs
    - Handles signature verification and signing
 
-8. **mock-bap-rabbit-mq** (Internal Port: 9003)
+8. **mock-bap-rabbitmq** (Internal Port: 9003)
    - Mock BAP backend service with RabbitMQ integration
    - Simulates a Buyer App Provider application
    - Consumes messages from RabbitMQ queues (routing keys: `bap.on_discover`, `bap.on_select`, etc.)
    - Publishes requests to RabbitMQ for ONIX adapter processing
    - **Note**: Runs in queue-only mode - no external HTTP ports exposed
 
-9. **mock-bpp-rabbit-mq** (Internal Port: 9004)
+9. **mock-bpp-rabbitmq** (Internal Port: 9004)
    - Mock BPP backend service with RabbitMQ integration
    - Simulates a Buyer Platform Provider application
    - Consumes messages from RabbitMQ queues (routing keys: `bpp.discover`, `bpp.select`, etc.)
@@ -266,8 +380,8 @@ Once all services are deployed, you can access them via Kubernetes services:
 
 | Service | Service Name | Port | Description |
 |---------|--------------|------|-------------|
-| **RabbitMQ** | `rabbitmq` | 5672 | AMQP port |
-| **RabbitMQ Management** | `rabbitmq` | 15672 | Management UI (guest/guest) |
+| **RabbitMQ** | `rabbitmq` | 5672 | RabbitMQ AMQP broker |
+| **RabbitMQ Management** | `rabbitmq` | 15672 | RabbitMQ Management UI |
 | **Mock Registry** | `mock-registry` | 3030 | Registry service |
 | **Mock CDS** | `mock-cds` | 8082 | Catalog Discovery Service |
 | **ONIX BAP Plugin** | `onix-bap-plugin-rabbitmq` | 8001 | HTTP endpoint for bapTxnReceiver |
@@ -283,19 +397,19 @@ To access services from your local machine:
 
 ```bash
 # Port forward RabbitMQ Management UI
-kubectl port-forward svc/rabbitmq 15672:15672
+kubectl port-forward svc/rabbitmq 15672:15672 -n ev-charging-sandbox
 
 # Port forward Mock Registry
-kubectl port-forward svc/mock-registry 3030:3030
+kubectl port-forward svc/mock-registry 3030:3030 -n ev-charging-sandbox
 
 # Port forward Mock CDS
-kubectl port-forward svc/mock-cds 8082:8082
+kubectl port-forward svc/mock-cds 8082:8082 -n ev-charging-sandbox
 
 # Port forward ONIX BAP Plugin
-kubectl port-forward svc/onix-bap-plugin-rabbitmq 8001:8001
+kubectl port-forward svc/onix-bap-plugin-rabbitmq 8001:8001 -n ev-charging-sandbox
 
 # Port forward ONIX BPP Plugin
-kubectl port-forward svc/onix-bpp-plugin-rabbitmq 8002:8002
+kubectl port-forward svc/onix-bpp-plugin-rabbitmq 8002:8002 -n ev-charging-sandbox
 ```
 
 ### Using Ingress (if configured)
@@ -362,26 +476,27 @@ If you have an Ingress controller configured, you can access services via Ingres
 
 ## RabbitMQ Management UI
 
-The RabbitMQ Management Plugin provides a web-based UI for monitoring and managing RabbitMQ.
+The RabbitMQ Management Plugin is enabled by default and provides a web-based UI for monitoring and managing RabbitMQ.
 
-### Accessing the Management UI
+### Accessing RabbitMQ Management UI
 
 1. **Port forward the service**:
    ```bash
-   kubectl port-forward svc/rabbitmq 15672:15672
+   kubectl port-forward svc/rabbitmq 15672:15672 -n ev-charging-sandbox
    ```
 
 2. **Open the Management UI**:
    - URL: `http://localhost:15672`
-   - Username: `guest`
-   - Password: `guest`
+   - Username: `admin` (default, configured in values.yaml)
+   - Password: `admin` (default, configured in values.yaml)
 
 ### Features
 
-- View exchanges, queues, and bindings
-- Monitor message rates and consumer activity
-- View cluster status and node information
-- Manage users and permissions
+- View exchanges and queues
+- Browse messages
+- Monitor consumer connections
+- View cluster metrics
+- Manage bindings and routing
 
 ## Publishing Test Messages
 
@@ -506,43 +621,46 @@ For more details, see [Schema Setup Guide](../SCHEMA_SETUP.md).
 
 ```bash
 # Check all pods
-kubectl get pods
+kubectl get pods -n ev-charging-sandbox
 
 # Check specific component
-kubectl get pods -l app.kubernetes.io/component=bap
-kubectl get pods -l app.kubernetes.io/component=bpp
+kubectl get pods -n ev-charging-sandbox -l app.kubernetes.io/component=bap
+kubectl get pods -n ev-charging-sandbox -l app.kubernetes.io/component=bpp
 
 # Check pod logs
-kubectl logs <pod-name>
-kubectl logs -f <pod-name>  # Follow logs
+kubectl logs -n ev-charging-sandbox <pod-name>
+kubectl logs -f -n ev-charging-sandbox <pod-name>  # Follow logs
 ```
 
-### Check RabbitMQ Status
+### Check RabbitMQ Queues
 
 ```bash
-# Port forward RabbitMQ Management UI and check via web UI
-kubectl port-forward svc/rabbitmq 15672:15672
+# Port forward RabbitMQ Management UI and check queues via web UI
+kubectl port-forward svc/rabbitmq 15672:15672 -n ev-charging-sandbox
 
 # Or use kubectl exec to access RabbitMQ pod
-kubectl exec -it <rabbitmq-pod-name> -- rabbitmq-diagnostics ping
+kubectl exec -it -n ev-charging-sandbox <rabbitmq-pod-name> -- rabbitmqctl list_queues
+kubectl exec -it -n ev-charging-sandbox <rabbitmq-pod-name> -- rabbitmqctl list_exchanges
+kubectl exec -it -n ev-charging-sandbox <rabbitmq-pod-name> -- rabbitmqctl list_bindings
 ```
 
 ### Check Services
 
 ```bash
 # List all services
-kubectl get svc
+kubectl get svc -n ev-charging-sandbox
 
 # Check service endpoints
-kubectl get endpoints
+kubectl get endpoints -n ev-charging-sandbox
 ```
 
 ### Common Issues
 
 1. **RabbitMQ pod not starting**: Check resource limits and node capacity
-2. **Queues not created**: Verify exchange and queue bindings in adapter config
-3. **Messages not consumed**: Check consumer group configuration and pod logs
+2. **Queues not created**: Verify RabbitMQ exchange and queue configuration in adapter config
+3. **Messages not consumed**: Check consumer configuration and pod logs
 4. **Network issues**: Verify service names are correct in configuration
+5. **Connection refused**: Ensure RabbitMQ service is accessible and credentials are correct
 
 ## Uninstalling
 
@@ -578,4 +696,4 @@ kubectl delete all -n ev-charging-sandbox -l app.kubernetes.io/name=onix-rabbitm
 - Mock RabbitMQ services run in queue-only mode (no external HTTP ports)
 - Production deployments should use proper secrets management for keys and credentials
 - RabbitMQ requires persistent storage for production deployments
-
+- Default RabbitMQ credentials are `admin/admin` - change these in production
