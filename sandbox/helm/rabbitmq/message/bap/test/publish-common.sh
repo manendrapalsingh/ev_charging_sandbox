@@ -2,10 +2,10 @@
 
 # Common functions for publishing messages to RabbitMQ
 
-RABBITMQ_HOST="${RABBITMQ_HOST:-localhost}"
+RABBITMQ_HOST="${RABBITMQ_HOST:-rabbitmq}"
 RABBITMQ_PORT="${RABBITMQ_PORT:-15672}"
-RABBITMQ_USER="${RABBITMQ_USER:-admin}"
-RABBITMQ_PASS="${RABBITMQ_PASS:-admin}"
+RABBITMQ_USER="${RABBITMQ_USER:-guest}"
+RABBITMQ_PASS="${RABBITMQ_PASS:-guest}"
 EXCHANGE="${EXCHANGE:-beckn_exchange}"
 
 # Colors for output
@@ -65,14 +65,14 @@ publish_message() {
   echo "  Message ID: $message_id"
   
   # Build the request JSON with payload as a string
-  # First, get the compact JSON, then convert it to a JSON string using jq -Rs
+  # Get the compact JSON - this will be used as the payload string
   local compact_json=$(echo "$message" | jq -c .)
-  local payload_string=$(echo "$compact_json" | jq -Rs .)
   
-  # Build the request JSON, using the payload string directly
+  # Build the request JSON
+  # Use --arg to pass the payload as a string (jq will JSON-encode it)
   local request_json=$(jq -n \
     --arg routing_key "$routing_key" \
-    --argjson payload "$payload_string" \
+    --arg payload "$compact_json" \
     '{
       "properties": {},
       "routing_key": $routing_key,
@@ -83,23 +83,41 @@ publish_message() {
   # Retry loop
   while [ $retry_count -lt $MAX_RETRIES ]; do
     retry_count=$((retry_count + 1))
-    local response=$(curl -s -u "${RABBITMQ_USER}:${RABBITMQ_PASS}" \
+    local http_code
+    local response
+    response=$(curl -s -w "\n%{http_code}" -u "${RABBITMQ_USER}:${RABBITMQ_PASS}" \
       -H "Content-Type: application/json" \
       -X POST \
       "http://${RABBITMQ_HOST}:${RABBITMQ_PORT}/api/exchanges/%2F/${EXCHANGE}/publish" \
       -d "$request_json")
     
-    if echo "$response" | grep -q '"routed":true'; then
+    http_code=$(echo "$response" | tail -n1)
+    response=$(echo "$response" | sed '$d')
+    
+    if [ "$http_code" = "200" ] && echo "$response" | grep -q '"routed":true'; then
       echo -e "${GREEN}  ✓ Published successfully!${NC}"
       echo ""
       return 0
     else
       if [ $retry_count -lt $MAX_RETRIES ]; then
         echo -e "${YELLOW}  ⚠ Failed to publish (attempt $retry_count/$MAX_RETRIES), retrying...${NC}"
+        if [ -n "$response" ]; then
+          echo "  Response: $response"
+        fi
+        if [ -n "$http_code" ] && [ "$http_code" != "200" ]; then
+          echo "  HTTP Code: $http_code"
+        fi
         sleep 1
       else
         echo -e "${RED}  ✗ Failed to publish after $MAX_RETRIES attempts${NC}"
-        echo "  Response: $response"
+        if [ -n "$http_code" ] && [ "$http_code" != "200" ]; then
+          echo "  HTTP Code: $http_code"
+        fi
+        if [ -n "$response" ]; then
+          echo "  Response: $response"
+        else
+          echo "  Response: (empty or connection failed)"
+        fi
         echo ""
         return 1
       fi

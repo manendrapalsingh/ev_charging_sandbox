@@ -2,10 +2,10 @@
 
 # Common functions for publishing messages to RabbitMQ
 
-RABBITMQ_HOST="${RABBITMQ_HOST:-localhost}"
+RABBITMQ_HOST="${RABBITMQ_HOST:-rabbitmq}"
 RABBITMQ_PORT="${RABBITMQ_PORT:-15672}"
-RABBITMQ_USER="${RABBITMQ_USER:-admin}"
-RABBITMQ_PASS="${RABBITMQ_PASS:-admin}"
+RABBITMQ_USER="${RABBITMQ_USER:-guest}"
+RABBITMQ_PASS="${RABBITMQ_PASS:-guest}"
 EXCHANGE="${EXCHANGE:-beckn_exchange}"
 
 # Colors for output

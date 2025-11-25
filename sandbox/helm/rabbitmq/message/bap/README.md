@@ -258,10 +258,10 @@ All JSON message files are located in the `example/` directory. The `publish-all
 Scripts use environment variables for configuration:
 
 ```bash
-export RABBITMQ_HOST=localhost      # Default: localhost
-export RABBITMQ_PORT=15672          # Default: 15672
-export RABBITMQ_USER=admin           # Default: admin
-export RABBITMQ_PASS=admin           # Default: admin
+export RABBITMQ_HOST=rabbitmq       # Default: rabbitmq (cluster service)
+export RABBITMQ_PORT=15672          # Default: 15672 (management API)
+export RABBITMQ_USER=guest          # Default: guest
+export RABBITMQ_PASS=guest          # Default: guest
 export EXCHANGE=beckn_exchange      # Default: beckn_exchange
 ```
 
