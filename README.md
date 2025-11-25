@@ -98,6 +98,8 @@ The **onix-adapter** is a production-ready, plugin-based middleware adapter for 
 
 Start with the **Complete Sandbox** for a full testing environment with all services:
 
+**Docker Sandbox Environments:**
+
 **Monolithic API Sandbox** (REST API communication):
 ```bash
 # Navigate to the monolithic API sandbox directory
@@ -137,7 +139,7 @@ For detailed instructions, see: **[RabbitMQ Sandbox Guide](./sandbox/docker/rabb
 # Navigate to the Kafka sandbox directory
 cd sandbox/docker/kafka
 
-# Start all services (ONIX adapters, Kafka, Zookeeper, mock services, Redis)
+# Start all services (ONIX adapters, Kafka, mock services, Redis)
 docker-compose up -d
 
 # Verify services are running
@@ -165,6 +167,186 @@ docker-compose logs -f
 ```
 
 For detailed instructions, see: **[Microservice API Sandbox Guide](./sandbox/docker/api/microservice/README.md)**
+
+**Helm Sandbox Environments (Kubernetes):**
+
+**Monolithic API Sandbox** (Kubernetes deployment):
+```bash
+# Navigate to the monolithic API sandbox directory
+cd sandbox/helm/api/monolithic
+
+# Deploy BAP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-bap ../../../../helm/api/monolithic \
+  -f ../../../../helm/api/monolithic/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Deploy BPP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-bpp ../../../../helm/api/monolithic \
+  -f ../../../../helm/api/monolithic/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Install multiple instances with different release names
+helm install ev-charging-bap-1 ../../../../helm/api/monolithic \
+  -f ../../../../helm/api/monolithic/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+helm install ev-charging-bap-2 ../../../../helm/api/monolithic \
+  -f ../../../../helm/api/monolithic/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox
+
+# Check deployment status
+kubectl get pods
+kubectl get pods -n ev-charging-sandbox  # If using namespace
+kubectl get svc
+```
+
+For detailed instructions, see: **[Monolithic API Helm Sandbox Guide](./sandbox/helm/api/monolithic/README.md)**
+
+**Microservice API Sandbox** (Kubernetes deployment):
+```bash
+# Navigate to the microservice API sandbox directory
+cd sandbox/helm/api/microservice
+
+# Deploy BAP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-bap ../../../../helm/api/microservice \
+  -f ../../../../helm/api/microservice/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Deploy BPP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-bpp ../../../../helm/api/microservice \
+  -f ../../../../helm/api/microservice/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Install multiple instances with different release names
+helm install ev-charging-bap-1 ../../../../helm/api/microservice \
+  -f ../../../../helm/api/microservice/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+helm install ev-charging-bap-2 ../../../../helm/api/microservice \
+  -f ../../../../helm/api/microservice/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox
+
+# Check deployment status
+kubectl get pods
+kubectl get pods -n ev-charging-sandbox  # If using namespace
+kubectl get svc
+```
+
+For detailed instructions, see: **[Microservice API Helm Sandbox Guide](./sandbox/helm/api/microservice/README.md)**
+
+**Kafka Sandbox** (Kubernetes deployment):
+```bash
+# Navigate to the Kafka sandbox directory
+cd sandbox/helm/kafka
+
+# Deploy BAP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-kafka-bap ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Deploy BPP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-kafka-bpp ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Install multiple instances with different release names
+helm install ev-charging-kafka-bap-1 ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+helm install ev-charging-kafka-bap-2 ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox
+
+# Check deployment status
+kubectl get pods
+kubectl get pods -n ev-charging-sandbox  # If using namespace
+kubectl get svc
+```
+
+For detailed instructions, see: **[Kafka Helm Sandbox Guide](./sandbox/helm/kafka/README.md)**
+
+**RabbitMQ Sandbox** (Kubernetes deployment):
+```bash
+# Navigate to the RabbitMQ sandbox directory
+cd sandbox/helm/rabbitmq
+
+# Deploy BAP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-rabbitmq-bap ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Deploy BPP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-rabbitmq-bpp ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Install multiple instances with different release names
+helm install ev-charging-rabbitmq-bap-1 ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+helm install ev-charging-rabbitmq-bap-2 ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox
+
+# Check deployment status
+kubectl get pods
+kubectl get pods -n ev-charging-sandbox  # If using namespace
+kubectl get svc
+```
+
+**Note**: 
+- Use `helm upgrade --install` for idempotent deployments (installs if release doesn't exist, upgrades if it does)
+- All Helm deployments support the `--namespace` flag to deploy to a specific namespace
+- Use `--create-namespace` to automatically create the namespace if it doesn't exist
+- To install multiple instances in the same namespace, use different release names (e.g., `ev-charging-bap-1`, `ev-charging-bap-2`)
+
+For detailed instructions, see: **[RabbitMQ Helm Sandbox Guide](./sandbox/helm/rabbitmq/README.md)**
 
 #### Option 2: Standalone ONIX Adapters
 
@@ -292,6 +474,12 @@ Phase 2+: Direct BPP Communication
 
 ### 2. Helm Chart Integration
 
+#### 2.0 Sandbox Environments
+- **[2.0.1 Monolithic API Sandbox](./sandbox/helm/api/monolithic/README.md)** ✅ **Ready** - Complete Kubernetes sandbox with monolithic architecture (REST API)
+- **[2.0.2 Microservice API Sandbox](./sandbox/helm/api/microservice/README.md)** ✅ **Ready** - Complete Kubernetes sandbox with microservice architecture (REST API)
+- **[2.0.3 RabbitMQ Sandbox](./sandbox/helm/rabbitmq/README.md)** ✅ **Ready** - Complete Kubernetes sandbox with RabbitMQ message queue integration
+- **[2.0.4 Kafka Sandbox](./sandbox/helm/kafka/README.md)** ✅ **Ready** - Complete Kubernetes sandbox with Apache Kafka event streaming integration
+
 #### 2.1 Monolithic Architecture
 - **[2.1.1 API Integration](./helm/api/monolithic/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
 
@@ -299,8 +487,8 @@ Phase 2+: Direct BPP Communication
 - **[2.2.1 API Integration](./helm/api/microservice/README.md)** ✅ **Ready** - Kubernetes deployment with Helm charts
 
 #### 2.3 Message Queue & Event Streaming (Works for both architectures)
-- [2.3.1 RabbitMQ Integration](./helm/rabbitmq/README.md) - Coming soon
-- [2.3.2 Kafka Integration](./helm/kafka/README.md) - Coming soon
+- **[2.3.1 RabbitMQ Integration](./helm/rabbitmq/README.md)** ✅ **Ready** - Kubernetes deployment with RabbitMQ
+- **[2.3.2 Kafka Integration](./helm/kafka/README.md)** ✅ **Ready** - Kubernetes deployment with Kafka
 
 ---
 
@@ -367,7 +555,7 @@ ev_charging_sandbox/
 │       ├── docker-compose-onix-bpp-rabbit-mq-plugin.yml
 │       └── README.md
 ├── sandbox/                          # ✅ Complete sandbox environments
-│   ├── docker/
+│   ├── docker/                       # Docker Compose sandbox environments
 │   │   ├── api/
 │   │   │   ├── monolithic/           # Monolithic API sandbox with all services
 │   │   │   │   ├── docker-compose.yml
@@ -410,6 +598,40 @@ ev_charging_sandbox/
 │   │       ├── mock-cds_config.yml
 │   │       ├── mock-registry_config.yml
 │   │       ├── message/              # Test messages and publishing scripts
+│   │       │   ├── bap/
+│   │       │   │   ├── example/      # JSON message files
+│   │       │   │   ├── test/        # Publishing scripts
+│   │       │   │   └── README.md
+│   │       │   └── bpp/
+│   │       │       ├── example/      # JSON callback files
+│   │       │       ├── test/        # Publishing scripts
+│   │       │       └── README.md
+│   │       └── README.md
+│   ├── helm/                         # Helm/Kubernetes sandbox environments
+│   │   ├── api/
+│   │   │   ├── monolithic/           # Monolithic API Helm sandbox
+│   │   │   │   ├── values-sandbox.yaml
+│   │   │   │   └── README.md
+│   │   │   └── microservice/          # Microservice API Helm sandbox
+│   │   │       ├── values-sandbox.yaml
+│   │   │       └── README.md
+│   │   ├── kafka/                    # Kafka Helm sandbox
+│   │   │   ├── values-sandbox.yaml
+│   │   │   ├── mock-*.yml            # Mock service configs
+│   │   │   ├── message/               # Test messages and publishing scripts
+│   │   │   │   ├── bap/
+│   │   │   │   │   ├── example/      # JSON message files
+│   │   │   │   │   ├── test/         # Publishing scripts
+│   │   │   │   │   └── README.md
+│   │   │   │   └── bpp/
+│   │   │   │       ├── example/      # JSON callback files
+│   │   │   │       ├── test/         # Publishing scripts
+│   │   │   │       └── README.md
+│   │   │   └── README.md
+│   │   └── rabbitmq/                 # RabbitMQ Helm sandbox
+│   │       ├── values-sandbox.yaml
+│   │       ├── mock-*.yml            # Mock service configs
+│   │       ├── message/               # Test messages and publishing scripts
 │   │       │   ├── bap/
 │   │       │   │   ├── example/      # JSON message files
 │   │       │   │   ├── test/        # Publishing scripts
@@ -548,6 +770,126 @@ docker-compose logs -f onix-bap-plugin
 docker-compose down
 ```
 
+**Helm Sandbox Environments:**
+
+**Monolithic API Helm Sandbox:**
+```bash
+# Navigate to the monolithic API Helm sandbox directory
+cd sandbox/helm/api/monolithic
+
+# Deploy BAP component
+helm install ev-charging-bap ../../../helm/api/monolithic \
+  -f ../../../helm/api/monolithic/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap
+
+# Deploy BPP component
+helm install ev-charging-bpp ../../../helm/api/monolithic \
+  -f ../../../helm/api/monolithic/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp
+
+# Check deployment status
+kubectl get pods
+kubectl get svc
+
+# Port forward to access services locally
+kubectl port-forward svc/onix-bap-plugin 8001:8001
+kubectl port-forward svc/onix-bpp-plugin 8002:8002
+
+# Uninstall
+helm uninstall ev-charging-bap ev-charging-bpp
+```
+
+**Microservice API Helm Sandbox:**
+```bash
+# Navigate to the microservice API Helm sandbox directory
+cd sandbox/helm/api/microservice
+
+# Deploy BAP component
+helm install ev-charging-bap ../../../helm/api/microservice \
+  -f ../../../helm/api/microservice/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap
+
+# Deploy BPP component
+helm install ev-charging-bpp ../../../helm/api/microservice \
+  -f ../../../helm/api/microservice/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp
+
+# Check deployment status
+kubectl get pods
+kubectl get svc
+
+# Uninstall
+helm uninstall ev-charging-bap ev-charging-bpp
+```
+
+**Kafka Helm Sandbox:**
+```bash
+# Navigate to the Kafka Helm sandbox directory
+cd sandbox/helm/kafka
+
+# Deploy BAP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-kafka-bap ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Deploy BPP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-kafka-bpp ../../../helm/kafka \
+  -f ../../../helm/kafka/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Check deployment status
+kubectl get pods -n ev-charging-sandbox
+kubectl get svc -n ev-charging-sandbox
+
+# Port forward Kafka UI
+kubectl port-forward svc/kafka-ui 8080:8080 -n ev-charging-sandbox
+
+# Uninstall
+helm uninstall ev-charging-kafka-bap ev-charging-kafka-bpp --namespace ev-charging-sandbox
+```
+
+**RabbitMQ Helm Sandbox:**
+```bash
+# Navigate to the RabbitMQ Helm sandbox directory
+cd sandbox/helm/rabbitmq
+
+# Deploy BAP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-rabbitmq-bap ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bap.yaml \
+  -f values-sandbox.yaml \
+  --set component=bap \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Deploy BPP component (idempotent - installs or upgrades)
+helm upgrade --install ev-charging-rabbitmq-bpp ../../../helm/rabbitmq \
+  -f ../../../helm/rabbitmq/values-bpp.yaml \
+  -f values-sandbox.yaml \
+  --set component=bpp \
+  --namespace ev-charging-sandbox \
+  --create-namespace
+
+# Check deployment status
+kubectl get pods -n ev-charging-sandbox
+kubectl get svc -n ev-charging-sandbox
+
+# Port forward RabbitMQ Management UI
+kubectl port-forward svc/rabbitmq 15672:15672 -n ev-charging-sandbox
+
+# Uninstall
+helm uninstall ev-charging-rabbitmq-bap ev-charging-rabbitmq-bpp --namespace ev-charging-sandbox
+```
+
 **Available Endpoints (Monolithic API):**
 - **ONIX BAP**: `http://localhost:8001/bap/caller/{action}` and `http://localhost:8001/bap/receiver/{action}`
 - **ONIX BPP**: `http://localhost:8002/bpp/caller/{action}` and `http://localhost:8002/bpp/receiver/{action}`
@@ -577,6 +919,14 @@ docker-compose down
 - **Mock CDS**: `http://localhost:8082`
 - **Mock BAP Services**: `http://localhost:9001-9010` (one per endpoint)
 - **Mock BPP Services**: `http://localhost:9011-9020` (one per endpoint)
+
+**Available Endpoints (Helm Sandbox - after port forwarding):**
+- **ONIX BAP**: `http://localhost:8001/bap/caller/{action}` and `http://localhost:8001/bap/receiver/{action}`
+- **ONIX BPP**: `http://localhost:8002/bpp/caller/{action}` and `http://localhost:8002/bpp/receiver/{action}`
+- **Mock Registry**: `http://localhost:3030` (after port forwarding)
+- **Mock CDS**: `http://localhost:8082` (after port forwarding)
+- **Kafka UI**: `http://localhost:8080` (Kafka sandbox only, after port forwarding)
+- **RabbitMQ Management UI**: `http://localhost:15672` (RabbitMQ sandbox only, after port forwarding, guest/guest)
 
 ### Standalone ONIX Adapters
 
@@ -678,10 +1028,20 @@ curl -X POST http://localhost:8001/bap/caller/discover \
 ### Integration Guides
 
 #### Sandbox Environments
-- **[Monolithic API Sandbox Guide](./sandbox/docker/api/monolithic/README.md)**: ✅ Complete sandbox with monolithic architecture (REST API)
-- **[Microservice API Sandbox Guide](./sandbox/docker/api/microservice/README.md)**: ✅ Complete sandbox with microservice architecture (REST API)
-- **[RabbitMQ Sandbox Guide](./sandbox/docker/rabbitmq/README.md)**: ✅ Complete sandbox with RabbitMQ message queue integration
-- **[Kafka Sandbox Guide](./sandbox/docker/kafka/README.md)**: ✅ Complete sandbox with Apache Kafka event streaming integration
+
+**Docker Sandbox Environments:**
+- **[Monolithic API Sandbox Guide](./sandbox/docker/api/monolithic/README.md)**: ✅ Complete Docker sandbox with monolithic architecture (REST API)
+- **[Microservice API Sandbox Guide](./sandbox/docker/api/microservice/README.md)**: ✅ Complete Docker sandbox with microservice architecture (REST API)
+- **[RabbitMQ Sandbox Guide](./sandbox/docker/rabbitmq/README.md)**: ✅ Complete Docker sandbox with RabbitMQ message queue integration
+- **[Kafka Sandbox Guide](./sandbox/docker/kafka/README.md)**: ✅ Complete Docker sandbox with Apache Kafka event streaming integration
+
+**Helm/Kubernetes Sandbox Environments:**
+- **[Monolithic API Helm Sandbox Guide](./sandbox/helm/api/monolithic/README.md)**: ✅ Complete Kubernetes sandbox with monolithic architecture (REST API)
+- **[Microservice API Helm Sandbox Guide](./sandbox/helm/api/microservice/README.md)**: ✅ Complete Kubernetes sandbox with microservice architecture (REST API)
+- **[RabbitMQ Helm Sandbox Guide](./sandbox/helm/rabbitmq/README.md)**: ✅ Complete Kubernetes sandbox with RabbitMQ message queue integration
+- **[Kafka Helm Sandbox Guide](./sandbox/helm/kafka/README.md)**: ✅ Complete Kubernetes sandbox with Apache Kafka event streaming integration
+
+**Standalone Mock Services:**
 - **[Standalone Mock Services](./sandbox/)**: Individual mock service deployments (BAP/BPP for REST API, Kafka, and RabbitMQ; CDS, Registry)
 
 #### ONIX Adapter Integration
@@ -695,6 +1055,8 @@ curl -X POST http://localhost:8001/bap/caller/discover \
 **Helm Chart Integration:**
 - **[Monolithic API Integration](./helm/api/monolithic/README.md)**: ✅ Complete guide for Kubernetes deployment with Helm charts
 - **[Microservice API Integration](./helm/api/microservice/README.md)**: ✅ Complete guide for microservice Kubernetes deployment
+- **[RabbitMQ Integration](./helm/rabbitmq/README.md)**: ✅ Complete guide for RabbitMQ Kubernetes deployment
+- **[Kafka Integration](./helm/kafka/README.md)**: ✅ Complete guide for Kafka Kubernetes deployment
 
 ### Related Documentation
 

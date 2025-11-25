@@ -38,7 +38,7 @@ modules:
         registry:
           id: registry
           config:
-            url: http://mock-registry:3030
+            url: http://mock-registry:3030   # replase 
             retry_max: 3
             retry_wait_min: 100ms
             retry_wait_max: 500ms
